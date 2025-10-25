@@ -68,15 +68,26 @@
    cp .env.example .env.local
    ```
    
-   `.env.local` 파일에 다음 내용 추가:
+   `.env.local` 파일에 실제 값들을 입력:
    ```env
+   # Firebase 설정 (Firebase 콘솔에서 확인)
+   VITE_FIREBASE_API_KEY=your_firebase_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   
+   # 카카오 API 키 (카카오 개발자 센터에서 발급)
    VITE_KAKAO_API_KEY=your_kakao_api_key
    ```
 
 4. **Firebase 설정**
    - Firebase 콘솔에서 프로젝트 생성
    - Firestore, Authentication, Storage 활성화
-   - Firebase 설정 정보를 `src/services/firebase.ts`에 추가
+   - 프로젝트 설정에서 웹 앱 추가
+   - Firebase 설정 정보를 `.env.local`에 입력
 
 5. **개발 서버 실행**
    ```bash

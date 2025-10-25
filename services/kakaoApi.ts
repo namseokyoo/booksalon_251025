@@ -1,7 +1,8 @@
 
 import { Book } from '../types';
 
-const KAKAO_API_KEY = process.env.KAKAO_API_KEY; // IMPORTANT: Set this in your environment.
+// 카카오 API 키 설정 (환경 변수 또는 직접 설정)
+const KAKAO_API_KEY = process.env.KAKAO_API_KEY || 'fcee7480d8b544ccaab9aad31011160d';
 
 const API_URL = 'https://dapi.kakao.com/v3/search/book?target=isbn';
 

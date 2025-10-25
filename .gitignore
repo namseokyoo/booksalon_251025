@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Development Log (로컬 개발용 - GitHub에 업로드하지 않음)
+DEVELOPMENT_LOG.md
+
 node_modules
 dist
 dist-ssr

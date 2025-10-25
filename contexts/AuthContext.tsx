@@ -1,15 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { auth } from '../services/firebase';
+import { UserProfileService } from '../services/userProfile';
 
 interface AuthContextType {
-    currentUser: any | null;
-    loading: boolean;
-    // FIX: Update parameter names from 'pass' to 'password' to match the implementation signature.
-    signup: (email: string, password: string) => Promise<any>;
-    login: (email: string, password: string) => Promise<any>;
-    logout: () => Promise<void>;
-    deleteAccount: () => Promise<void>;
+  currentUser: any | null;
+  loading: boolean;
+  // FIX: Update parameter names from 'pass' to 'password' to match the implementation signature.
+  signup: (email: string, password: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<any>;
+  logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,17 +42,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     return auth.signOut();
   }
-  
+
   function deleteAccount() {
     const user = auth.currentUser;
     if (user) {
-        return user.delete();
+      return user.delete();
     }
     return Promise.reject(new Error("No user is logged in."));
   }
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // 사용자 프로필 생성/업데이트
+        try {
+          await UserProfileService.createOrUpdateProfile(user.uid, user.email || '');
+        } catch (error) {
+          console.error('프로필 생성/업데이트 실패:', error);
+        }
+      }
       setCurrentUser(user);
       setLoading(false);
     });

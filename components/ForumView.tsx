@@ -5,8 +5,10 @@ import BookInfo from './BookInfo';
 import PostItem from './PostItem';
 import CreatePostModal from './CreatePostModal';
 import { ArrowLeftIcon, PlusIcon } from './icons';
-import { db, firestore } from '../services/firebase';
+import { db } from '../services/firebase';
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { UserProfileService } from '../services/userProfile';
 
 interface ForumViewProps {
   forum: Forum;
@@ -20,9 +22,9 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
 
   useEffect(() => {
     if (!forum.isbn) return;
-    const unsubscribe = db.collection('forums').doc(forum.isbn).collection('posts')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'forums', forum.isbn, 'posts'), orderBy('createdAt', 'desc')),
+      snapshot => {
         const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Post[];
         setPosts(postsData);
       });
@@ -31,12 +33,12 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
 
   const handleAddPost = async (title: string, content: string) => {
     if (!currentUser) {
-        alert("글을 작성하려면 로그인이 필요합니다.");
-        return;
+      alert("글을 작성하려면 로그인이 필요합니다.");
+      return;
     }
 
-    const forumRef = db.collection('forums').doc(forum.isbn);
-    const postsRef = forumRef.collection('posts');
+    const forumRef = doc(db, 'forums', forum.isbn);
+    const postsRef = collection(db, 'forums', forum.isbn, 'posts');
 
     const newPost = {
       title,
@@ -45,18 +47,23 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
         uid: currentUser.uid,
         email: currentUser.email,
       },
-      createdAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
       commentCount: 0,
     };
 
-    await postsRef.add(newPost);
-    await forumRef.update({
-        postCount: firestore.FieldValue.increment(1)
+    await addDoc(postsRef, newPost);
+    await updateDoc(forumRef, {
+      postCount: increment(1)
     });
+
+    // 사용자 통계 업데이트
+    if (currentUser) {
+      await UserProfileService.updateUserStats(currentUser.uid, 'post', true);
+    }
 
     setIsModalOpen(false);
   };
-  
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="p-3 sm:p-6 lg:p-8 sticky top-[65px] bg-gray-900 z-10">
@@ -69,7 +76,7 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
 
       <div className="px-3 sm:px-6 lg:px-8 pb-20 space-y-3 sm:space-y-4">
         {posts.length > 0 ? (
-           posts.map(post => (
+          posts.map(post => (
             <PostItem key={post.id} post={post} isbn={forum.isbn} />
           ))
         ) : (

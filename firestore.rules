@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 프로필 규칙
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 포럼 규칙
+    match /forums/{forumId} {
+      allow read: if true; // 모든 사용자가 포럼을 읽을 수 있음
+      allow write: if request.auth != null; // 인증된 사용자만 포럼을 생성/수정할 수 있음
+      
+      // 포럼 내 게시물 규칙
+      match /posts/{postId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+        
+        // 게시물 내 댓글 규칙
+        match /comments/{commentId} {
+          allow read: if true;
+          allow create: if request.auth != null;
+          allow update, delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+        }
+      }
+    }
+    
+    // 활동 피드 규칙
+    match /activities/{activityId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

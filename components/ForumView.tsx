@@ -129,7 +129,7 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessag
           <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>목록으로 돌아가기</span>
         </button>
-        <BookInfo book={forum.book} />
+        <BookInfo book={forum.book} forum={forum} />
       </div>
 
       <div className="px-3 sm:px-6 lg:px-8 pb-20">

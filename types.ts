@@ -90,6 +90,18 @@ export interface Forum {
   category?: string; // 카테고리 (문학, SF, 자기계발, 역사 등)
   tags?: string[]; // 태그 목록
   popularity?: number; // 인기도 점수
+  averageRating?: number; // 평균 평점 (1-5)
+  totalRatings?: number; // 평가 수
+}
+
+// 책 평점 타입
+export interface BookRating {
+  id: string;
+  bookIsbn: string;
+  userId: string;
+  rating: number; // 1-5점
+  createdAt: any; // Firestore Timestamp
+  updatedAt?: any; // Firestore Timestamp
 }
 
 // 메시지 타입

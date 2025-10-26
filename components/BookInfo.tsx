@@ -13,6 +13,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
   const [myRating, setMyRating] = useState<number | null>(null);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [totalRatings, setTotalRatings] = useState<number>(0);
+  const [isEditing, setIsEditing] = useState(false);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -45,6 +46,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
     try {
       await RatingService.setUserRating(forum.isbn, currentUser.uid, rating);
       setMyRating(rating);
+      setIsEditing(false);
       
       // 평균 평점 다시 로드
       const avg = await RatingService.getAverageRating(forum.isbn);
@@ -53,6 +55,10 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
     } catch (error) {
       console.error('평점 저장 실패:', error);
     }
+  };
+  
+  const handleEditClick = () => {
+    setIsEditing(true);
   };
 
   const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -102,98 +108,67 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
       {/* 내 평점 선택 UI */}
       {currentUser && (
         <div className="mt-4 pt-4 border-t border-gray-700">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-300">내 평점:</span>
-              {myRating ? (
-                <div className="flex items-center space-x-1">
-                  <button
-                    type="button"
-                    onClick={() => handleRatingClick(1)}
-                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
-                  >
-                    1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRatingClick(2)}
-                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
-                  >
-                    2
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRatingClick(3)}
-                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
-                  >
-                    3
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRatingClick(4)}
-                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
-                  >
-                    4
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRatingClick(5)}
-                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
-                  >
-                    5
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <span className="text-gray-500 text-sm">평점을 입력하세요:</span>
-                  <div className="flex items-center space-x-1">
-                    <button
-                      type="button"
-                      onClick={() => handleRatingClick(1)}
-                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    >
-                      1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRatingClick(2)}
-                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    >
-                      2
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRatingClick(3)}
-                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    >
-                      3
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRatingClick(4)}
-                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    >
-                      4
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRatingClick(5)}
-                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                    >
-                      5
-                    </button>
+          {!isEditing && myRating && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div>
+                  <span className="text-sm text-gray-300">내 평점</span>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <StarIcon key={star} filled={star <= myRating} />
+                      ))}
+                    </div>
+                    <span className="text-2xl font-bold text-white">{myRating}.0</span>
                   </div>
                 </div>
+                {averageRating > 0 && (
+                  <div className="flex items-center space-x-1 text-sm text-gray-400">
+                    <span>평균</span>
+                    <span className="text-white font-semibold text-lg">{averageRating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleEditClick}
+                className="px-3 py-1 text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-600 rounded hover:bg-cyan-600/10 transition-colors"
+              >
+                수정
+              </button>
+            </div>
+          )}
+          
+          {(!myRating || isEditing) && (
+            <div>
+              <div className="mb-3">
+                <span className="text-sm text-gray-300">
+                  {myRating ? '평점 수정' : '평점을 입력하세요'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => handleRatingClick(rating)}
+                    className="w-12 h-12 text-xl font-bold text-gray-400 hover:text-white hover:bg-gray-700 border-2 border-gray-600 hover:border-cyan-500 rounded-lg transition-all"
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="mt-3 px-3 py-1 text-sm text-gray-400 hover:text-gray-300"
+                >
+                  취소
+                </button>
               )}
             </div>
-            
-            {myRating && (
-              <div className="flex items-center space-x-1 text-sm text-gray-400">
-                <span>평균</span>
-                <span className="text-white font-semibold">{averageRating.toFixed(1)}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
     </div>

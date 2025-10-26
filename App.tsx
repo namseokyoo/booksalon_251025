@@ -6,6 +6,9 @@ import ForumView from './components/ForumView';
 import ProfilePage from './components/ProfilePage';
 import ActivityFeed from './components/ActivityFeed';
 import UserSearch from './components/UserSearch';
+import MessagingPage from './components/MessagingPage';
+import NotificationComponent from './components/NotificationComponent';
+import AdminDashboard from './components/AdminDashboard';
 import type { Forum, Book } from './types';
 import { useAuth } from './contexts/AuthContext';
 import LoginModal from './components/LoginModal';
@@ -13,8 +16,9 @@ import SignUpModal from './components/SignUpModal';
 import DeleteAccountModal from './components/DeleteAccountModal';
 
 const App = () => {
-  const [currentView, setCurrentView] = useState<'list' | 'forum' | 'profile' | 'activity' | 'search'>('list');
+  const [currentView, setCurrentView] = useState<'list' | 'forum' | 'profile' | 'activity' | 'search' | 'messaging' | 'notifications' | 'admin'>('list');
   const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
+  const [messagingTargetUserId, setMessagingTargetUserId] = useState<string | null>(null);
 
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
@@ -38,6 +42,28 @@ const App = () => {
 
   const handleShowActivity = () => {
     setCurrentView('activity');
+    setSelectedForum(null);
+  };
+
+  const handleShowSearch = () => {
+    setCurrentView('search');
+    setSelectedForum(null);
+  };
+
+  const handleShowMessaging = () => {
+    setMessagingTargetUserId(null); // 일반 메시징 페이지로 이동
+    setCurrentView('messaging');
+    setSelectedForum(null);
+  };
+
+  const handleShowNotifications = () => {
+    setCurrentView('notifications');
+    setSelectedForum(null);
+  };
+
+  const handleShowAdmin = () => {
+    setCurrentView('admin');
+    setSelectedForum(null);
   };
 
   const handleBackToList = () => {
@@ -61,7 +87,10 @@ const App = () => {
         onDeleteClick={() => setDeleteModalOpen(true)}
         onProfileClick={handleShowProfile}
         onActivityClick={handleShowActivity}
-        onSearchClick={() => setCurrentView('search')}
+        onSearchClick={handleShowSearch}
+        onMessagingClick={handleShowMessaging}
+        onNotificationsClick={handleShowNotifications}
+        onAdminClick={handleShowAdmin}
         onHomeClick={handleHomeClick}
       />
       <main>
@@ -73,10 +102,20 @@ const App = () => {
           <ActivityFeed onBack={handleBackToList} />
         ) : currentView === 'search' ? (
           <UserSearch onBack={handleBackToList} />
+        ) : currentView === 'messaging' ? (
+          <MessagingPage targetUserId={messagingTargetUserId || undefined} />
+        ) : currentView === 'notifications' ? (
+          <NotificationComponent />
+        ) : currentView === 'admin' ? (
+          <AdminDashboard />
         ) : selectedForum ? (
           <ForumView
             forum={selectedForum}
             onBack={handleBackToList}
+            onNavigateToMessaging={(userId) => {
+              setMessagingTargetUserId(userId);
+              setCurrentView('messaging');
+            }}
           />
         ) : (
           <div className="text-center p-8">

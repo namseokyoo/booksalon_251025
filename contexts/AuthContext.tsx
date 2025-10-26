@@ -1,6 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { auth } from '../services/firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  deleteUser
+} from 'firebase/auth';
 import { UserProfileService } from '../services/userProfile';
 
 interface AuthContextType {
@@ -12,6 +19,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
+
+export { type AuthContextType };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -31,28 +40,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // FIX: Add explicit types to function parameters to avoid implicit 'any' errors.
   function signup(email: string, password: string) {
-    return auth.createUserWithEmailAndPassword(email, password);
+    return createUserWithEmailAndPassword(auth, email, password);
   }
 
   // FIX: Add explicit types to function parameters to avoid implicit 'any' errors.
   function login(email: string, password: string) {
-    return auth.signInWithEmailAndPassword(email, password);
+    return signInWithEmailAndPassword(auth, email, password);
   }
 
   function logout() {
-    return auth.signOut();
+    return signOut(auth);
   }
 
   function deleteAccount() {
     const user = auth.currentUser;
     if (user) {
-      return user.delete();
+      return deleteUser(user);
     }
     return Promise.reject(new Error("No user is logged in."));
   }
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // 사용자 프로필 생성/업데이트
         try {

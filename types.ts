@@ -91,3 +91,77 @@ export interface Forum {
   tags?: string[]; // 태그 목록
   popularity?: number; // 인기도 점수
 }
+
+// 메시지 타입
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  createdAt: any; // Firestore Timestamp
+  readAt?: any; // Firestore Timestamp
+  messageType: 'text' | 'image' | 'file';
+  metadata?: {
+    fileName?: string;
+    fileSize?: number;
+    fileType?: string;
+  };
+}
+
+// 채팅방 타입
+export interface ChatRoom {
+  id: string;
+  participants: string[]; // 사용자 ID 배열
+  lastMessage?: Message;
+  lastMessageAt?: any; // Firestore Timestamp
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
+  unreadCount?: { [userId: string]: number }; // 사용자별 읽지 않은 메시지 수
+}
+
+// 알림 타입
+export interface Notification {
+  id: string;
+  userId: string; // 알림을 받을 사용자 ID
+  type: 'message' | 'like' | 'comment' | 'follow' | 'forum_invite' | 'system';
+  title: string;
+  content: string;
+  isRead: boolean;
+  createdAt: any; // Firestore Timestamp
+  readAt?: any; // Firestore Timestamp
+  metadata?: {
+    senderId?: string;
+    forumId?: string;
+    postId?: string;
+    commentId?: string;
+    chatRoomId?: string;
+  };
+}
+
+// 관리자 타입
+export interface AdminUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: 'admin' | 'moderator' | 'user';
+  permissions: string[];
+  createdAt: any; // Firestore Timestamp
+}
+
+// 신고 타입
+export interface Report {
+  id: string;
+  reporterId: string; // 신고한 사용자 ID
+  reportedUserId?: string; // 신고당한 사용자 ID
+  reportedPostId?: string; // 신고당한 게시물 ID
+  reportedCommentId?: string; // 신고당한 댓글 ID
+  reportedForumId?: string; // 신고당한 포럼 ID
+  type: 'spam' | 'harassment' | 'inappropriate_content' | 'fake_news' | 'other';
+  reason: string;
+  description: string;
+  status: 'pending' | 'reviewing' | 'resolved' | 'dismissed';
+  createdAt: any; // Firestore Timestamp
+  resolvedAt?: any; // Firestore Timestamp
+  resolvedBy?: string; // 해결한 관리자 ID
+  resolution?: string; // 해결 내용
+}

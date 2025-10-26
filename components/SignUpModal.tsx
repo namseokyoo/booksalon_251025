@@ -10,6 +10,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
@@ -21,15 +22,34 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
       return setError('비밀번호가 일치하지 않습니다.');
     }
     if (password.length < 6) {
-        return setError('비밀번호는 6자 이상이어야 합니다.');
+      return setError('비밀번호는 6자 이상이어야 합니다.');
+    }
+    if (!nickname.trim()) {
+      return setError('닉네임을 입력해주세요.');
+    }
+    if (nickname.length < 2 || nickname.length > 20) {
+      return setError('닉네임은 2자 이상 20자 이하여야 합니다.');
     }
 
     try {
       setError('');
       setLoading(true);
-      await signup(email, password);
+      const result = await signup(email, password);
+
+      // 회원가입 후 닉네임 저장
+      if (result?.user) {
+        const { UserProfileService } = await import('../services/userProfile');
+        await UserProfileService.createOrUpdateProfile(
+          result.user.uid,
+          email,
+          email.split('@')[0], // displayName
+          undefined, // bio
+          nickname
+        );
+      }
+
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('이미 사용 중인 이메일입니다.');
       } else {
@@ -56,6 +76,15 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               onChange={(e) => setEmail(e.target.value)}
             />
             <input
+              type="text"
+              required
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              placeholder="닉네임 (2-20자)"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              maxLength={20}
+            />
+            <input
               type="password"
               required
               className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-sm"
@@ -63,7 +92,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-             <input
+            <input
               type="password"
               required
               className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-sm"

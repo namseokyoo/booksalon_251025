@@ -146,13 +146,12 @@ export class UserProfileService {
     }
 
     // 사용자 활동 통계 업데이트
-    static async updateUserStats(uid: string, type: 'post' | 'comment' | 'forum', increment: boolean = true): Promise<void> {
+    static async updateUserStats(uid: string, type: 'post' | 'comment' | 'forum', shouldIncrement: boolean = true): Promise<void> {
         const userRef = doc(db, 'users', uid);
         const fieldName = `${type}Count`;
-        const change = increment ? 1 : -1;
 
         await updateDoc(userRef, {
-            [fieldName]: increment(change)
+            [fieldName]: shouldIncrement ? increment(1) : increment(-1)
         });
     }
 

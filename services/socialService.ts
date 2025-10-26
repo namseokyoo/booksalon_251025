@@ -140,36 +140,17 @@ export class SocialService {
         targetType: 'post' | 'comment',
         targetId: string,
         forumIsbn: string,
-        forumTitle: string
+        postId: string // 댓글의 경우 부모 게시물 ID
     ): Promise<boolean> {
-        const targetRef = db.collection('forums').doc(forumIsbn)
-            .collection('posts').doc(targetType === 'post' ? targetId : 'temp')
-            .collection(targetType === 'comment' ? 'comments' : 'posts').doc(targetType === 'comment' ? targetId : 'temp');
-
-        // 실제 경로로 수정
-        let actualRef;
+        let targetRef;
         if (targetType === 'post') {
-            actualRef = db.collection('forums').doc(forumIsbn).collection('posts').doc(targetId);
+            targetRef = doc(db, 'forums', forumIsbn, 'posts', targetId);
         } else {
-            // 댓글의 경우 부모 게시물을 찾아야 함
-            const postsRef = db.collection('forums').doc(forumIsbn).collection('posts');
-            const postsSnap = await postsRef.get();
-
-            for (const postDoc of postsSnap.docs) {
-                const commentsRef = postDoc.ref.collection('comments').doc(targetId);
-                const commentDoc = await commentsRef.get();
-                if (commentDoc.exists) {
-                    actualRef = commentsRef;
-                    break;
-                }
-            }
+            // 댓글의 경우
+            targetRef = doc(db, 'forums', forumIsbn, 'posts', postId, 'comments', targetId);
         }
 
-        if (!actualRef) {
-            throw new Error('대상을 찾을 수 없습니다.');
-        }
-
-        const targetDoc = await actualRef.get();
+        const targetDoc = await getDoc(targetRef);
         if (!targetDoc.exists) {
             throw new Error('대상을 찾을 수 없습니다.');
         }
@@ -180,43 +161,17 @@ export class SocialService {
 
         if (isLiked) {
             // 좋아요 취소
-            await actualRef.update({
+            await updateDoc(targetRef, {
                 likes: arrayRemove(currentUserId),
                 likeCount: increment(-1)
-            });
-
-            // 활동 기록 생성
-            await this.createActivity({
-                type: 'like',
-                userId: currentUserId,
-                userName: '', // 실제 사용자 정보로 업데이트 필요
-                userEmail: '',
-                targetId,
-                targetTitle: targetData?.title || targetData?.content?.substring(0, 50),
-                forumIsbn,
-                forumTitle,
-                metadata: { action: 'unlike', targetType }
             });
 
             return false;
         } else {
             // 좋아요 추가
-            await actualRef.update({
+            await updateDoc(targetRef, {
                 likes: arrayUnion(currentUserId),
                 likeCount: increment(1)
-            });
-
-            // 활동 기록 생성
-            await this.createActivity({
-                type: 'like',
-                userId: currentUserId,
-                userName: '', // 실제 사용자 정보로 업데이트 필요
-                userEmail: '',
-                targetId,
-                targetTitle: targetData?.title || targetData?.content?.substring(0, 50),
-                forumIsbn,
-                forumTitle,
-                metadata: { action: 'like', targetType }
             });
 
             return true;

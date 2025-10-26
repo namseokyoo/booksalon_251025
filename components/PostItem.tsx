@@ -6,7 +6,7 @@ import { ChatBubbleIcon } from './icons';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { db } from '../services/firebase';
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfileService } from '../services/userProfile';
 import { SocialService } from '../services/socialService';
@@ -57,12 +57,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
   useEffect(() => {
     if (!isExpanded) return;
 
-    const unsubscribe = db.collection('forums').doc(isbn).collection('posts').doc(post.id).collection('comments')
-      .orderBy('createdAt', 'asc')
-      .onSnapshot(snapshot => {
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, 'forums', isbn, 'posts', post.id, 'comments'),
+        orderBy('createdAt', 'asc')
+      ),
+      snapshot => {
         const commentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Comment[];
         setComments(commentsData);
-      });
+      }
+    );
 
     return () => unsubscribe();
   }, [isExpanded, isbn, post.id]);

@@ -4,7 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // 사용자 프로필 규칙
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if true; // 모든 사용자가 프로필을 읽을 수 있음
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // 포럼 규칙
@@ -16,13 +17,27 @@ service cloud.firestore {
       match /posts/{postId} {
         allow read: if true;
         allow create: if request.auth != null;
-        allow update, delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+        allow update: if request.auth != null && (
+          // 작성자는 내용 수정 가능
+          request.auth.uid == resource.data.author.uid ||
+          // 좋아요는 모든 인증된 사용자 가능
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likeCount']) &&
+           request.auth != null)
+        );
+        allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
         
         // 게시물 내 댓글 규칙
         match /comments/{commentId} {
           allow read: if true;
           allow create: if request.auth != null;
-          allow update, delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+          allow update: if request.auth != null && (
+            // 작성자는 내용 수정 가능
+            request.auth.uid == resource.data.author.uid ||
+            // 좋아요는 모든 인증된 사용자 가능
+            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likeCount']) &&
+             request.auth != null)
+          );
+          allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
         }
       }
     }
@@ -30,6 +45,29 @@ service cloud.firestore {
     // 활동 피드 규칙
     match /activities/{activityId} {
       allow read, write: if request.auth != null;
+    }
+    
+    // 채팅방 규칙
+    match /chatRooms/{chatRoomId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid in resource.data.participants;
+      
+      // 채팅방 내 메시지 규칙
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+      }
+    }
+    
+    // 북마크 규칙
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // 알림 규칙
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
 }

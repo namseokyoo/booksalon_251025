@@ -10,6 +10,9 @@ interface HeaderProps {
     onProfileClick: () => void;
     onActivityClick: () => void;
     onSearchClick: () => void;
+    onMessagingClick: () => void;
+    onNotificationsClick: () => void;
+    onAdminClick: () => void;
     onHomeClick: () => void;
 }
 
@@ -20,6 +23,9 @@ const Header: React.FC<HeaderProps> = ({
     onProfileClick,
     onActivityClick,
     onSearchClick,
+    onMessagingClick,
+    onNotificationsClick,
+    onAdminClick,
     onHomeClick
 }) => {
     const { currentUser, logout } = useAuth();
@@ -71,20 +77,20 @@ const Header: React.FC<HeaderProps> = ({
         await logout();
     };
 
-  const getDisplayName = () => {
-    if (!userProfile) return currentUser?.email?.split('@')[0] || '사용자';
-    return userProfile.nickname || userProfile.displayName || userProfile.email.split('@')[0];
-  };
+    const getDisplayName = () => {
+        if (!userProfile) return currentUser?.email?.split('@')[0] || '사용자';
+        return userProfile.nickname || userProfile.displayName || userProfile.email.split('@')[0];
+    };
 
-  const getProfileImageUrl = () => {
-    if (!userProfile) return null;
-    return userProfile.profileImageUrl || null;
-  };
+    const getProfileImageUrl = () => {
+        if (!userProfile) return null;
+        return userProfile.profileImageUrl || null;
+    };
 
-  const getProfileInitial = () => {
-    const displayName = getDisplayName();
-    return displayName.charAt(0).toUpperCase();
-  };
+    const getProfileInitial = () => {
+        const displayName = getDisplayName();
+        return displayName.charAt(0).toUpperCase();
+    };
 
     return (
         <header className="bg-gray-800 shadow-md sticky top-0 z-20">
@@ -108,20 +114,20 @@ const Header: React.FC<HeaderProps> = ({
                                     onClick={handleUserMenuClick}
                                     className="flex items-center space-x-2 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
                                 >
-                  {/* 프로필 이미지 */}
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
-                    {getProfileImageUrl() ? (
-                      <img
-                        src={getProfileImageUrl()!}
-                        alt="프로필"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-white text-xs sm:text-sm font-semibold">
-                        {getProfileInitial()}
-                      </span>
-                    )}
-                  </div>
+                                    {/* 프로필 이미지 */}
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gray-600 flex items-center justify-center">
+                                        {getProfileImageUrl() ? (
+                                            <img
+                                                src={getProfileImageUrl()!}
+                                                alt="프로필"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-white text-xs sm:text-sm font-semibold">
+                                                {getProfileInitial()}
+                                            </span>
+                                        )}
+                                    </div>
 
                                     {/* 사용자명 (데스크톱에서만 표시) */}
                                     <span className="hidden sm:block text-xs sm:text-sm truncate max-w-24">
@@ -181,6 +187,45 @@ const Header: React.FC<HeaderProps> = ({
                                             사용자 검색
                                         </button>
 
+                                        <button
+                                            onClick={() => {
+                                                setIsDropdownOpen(false);
+                                                onMessagingClick();
+                                            }}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+                                        >
+                                            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                            </svg>
+                                            메시지
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setIsDropdownOpen(false);
+                                                onNotificationsClick();
+                                            }}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+                                        >
+                                            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM9 7H4l5-5v5z" />
+                                            </svg>
+                                            알림
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setIsDropdownOpen(false);
+                                                onAdminClick();
+                                            }}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors duration-200"
+                                        >
+                                            <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                            관리자
+                                        </button>
+
                                         <hr className="my-1 border-gray-600" />
 
                                         <button
@@ -209,12 +254,20 @@ const Header: React.FC<HeaderProps> = ({
                                 )}
                             </div>
                         ) : (
-                            <button
-                                onClick={onLoginClick}
-                                className="px-3 py-1 text-xs sm:text-sm text-cyan-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
-                            >
-                                로그인
-                            </button>
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={onSignUpClick}
+                                    className="px-3 py-1 text-xs sm:text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                                >
+                                    회원가입
+                                </button>
+                                <button
+                                    onClick={onLoginClick}
+                                    className="px-3 py-1 text-xs sm:text-sm text-cyan-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                                >
+                                    로그인
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

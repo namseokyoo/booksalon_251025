@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import type { Forum, Post } from '../types';
+import type { Forum, Post, UserProfile } from '../types';
 import BookInfo from './BookInfo';
-import PostItem from './PostItem';
+import PostList from './PostList';
+import PostDetail from './PostDetail';
+import UserMenu from './UserMenu';
+import UserProfilePreview from './UserProfilePreview';
 import CreatePostModal from './CreatePostModal';
 import { ArrowLeftIcon, PlusIcon } from './icons';
 import { db } from '../services/firebase';
@@ -13,11 +16,16 @@ import { UserProfileService } from '../services/userProfile';
 interface ForumViewProps {
   forum: Forum;
   onBack: () => void;
+  onNavigateToMessaging?: (userId: string) => void;
 }
 
-const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
+const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessaging }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -49,6 +57,8 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
       },
       createdAt: serverTimestamp(),
       commentCount: 0,
+      likeCount: 0,
+      likes: [],
     };
 
     await addDoc(postsRef, newPost);
@@ -64,6 +74,54 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
     setIsModalOpen(false);
   };
 
+  const handlePostClick = (post: Post) => {
+    setSelectedPost(post);
+  };
+
+  const handleUserClick = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowUserMenu(true);
+  };
+
+  const handleShowProfile = () => {
+    setShowUserMenu(false);
+    setShowUserProfile(true);
+  };
+
+  const handleCloseUserMenu = () => {
+    setShowUserMenu(false);
+    setSelectedUser(null);
+  };
+
+  const handleCloseUserProfile = () => {
+    setShowUserProfile(false);
+    setSelectedUser(null);
+  };
+
+  const handleSendMessage = (userId: string) => {
+    if (onNavigateToMessaging) {
+      onNavigateToMessaging(userId);
+    } else {
+      console.log('Send message to user:', userId);
+    }
+  };
+
+  const handleBackToList = () => {
+    setSelectedPost(null);
+  };
+
+  if (selectedPost) {
+    return (
+      <PostDetail
+        post={selectedPost}
+        isbn={forum.isbn}
+        onBack={handleBackToList}
+        onUserClick={handleUserClick}
+        onSendMessage={handleSendMessage}
+      />
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="p-3 sm:p-6 lg:p-8 sticky top-[65px] bg-gray-900 z-10">
@@ -74,17 +132,12 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
         <BookInfo book={forum.book} />
       </div>
 
-      <div className="px-3 sm:px-6 lg:px-8 pb-20 space-y-3 sm:space-y-4">
-        {posts.length > 0 ? (
-          posts.map(post => (
-            <PostItem key={post.id} post={post} isbn={forum.isbn} />
-          ))
-        ) : (
-          <div className="text-center py-8 sm:py-10 px-4 border-2 border-dashed border-gray-700 rounded-lg mt-3 sm:mt-4">
-            <p className="text-sm sm:text-base text-gray-400">아직 게시물이 없습니다.</p>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">첫 번째 글을 작성해보세요.</p>
-          </div>
-        )}
+      <div className="px-3 sm:px-6 lg:px-8 pb-20">
+        <PostList
+          posts={posts}
+          onPostClick={handlePostClick}
+          onUserClick={handleUserClick}
+        />
       </div>
 
       <button
@@ -98,6 +151,25 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack }) => {
       </button>
 
       {isModalOpen && <CreatePostModal onClose={() => setIsModalOpen(false)} onSubmit={handleAddPost} />}
+
+      {showUserMenu && selectedUser && (
+        <div className="fixed inset-0 z-40" onClick={handleCloseUserMenu}>
+          <div className="absolute top-20 left-4" onClick={(e) => e.stopPropagation()}>
+            <UserMenu
+              user={selectedUser}
+              onClose={handleCloseUserMenu}
+              onShowProfile={handleShowProfile}
+            />
+          </div>
+        </div>
+      )}
+
+      {showUserProfile && selectedUser && (
+        <UserProfilePreview
+          user={selectedUser}
+          onClose={handleCloseUserProfile}
+        />
+      )}
     </div>
   );
 };

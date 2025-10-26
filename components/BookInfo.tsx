@@ -13,7 +13,6 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
   const [myRating, setMyRating] = useState<number | null>(null);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [totalRatings, setTotalRatings] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -58,7 +57,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
 
   const StarIcon = ({ filled }: { filled: boolean }) => (
     <svg
-      className={`w-5 h-5 ${filled ? 'text-yellow-400' : 'text-gray-500'}`}
+      className={`w-4 h-4 ${filled ? 'text-yellow-400' : 'text-gray-600'}`}
       fill="currentColor"
       viewBox="0 0 20 20"
     >
@@ -103,37 +102,97 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
       {/* 내 평점 선택 UI */}
       {currentUser && (
         <div className="mt-4 pt-4 border-t border-gray-700">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center space-x-3">
               <span className="text-sm text-gray-300">내 평점:</span>
               {myRating ? (
                 <div className="flex items-center space-x-1">
-                  <span className="text-white font-semibold">{myRating}</span>
-                  <span className="text-gray-500">/</span>
-                  <span className="text-gray-400">{averageRating.toFixed(1)}</span>
-                  <span className="text-gray-500 text-xs ml-2">(평균)</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRatingClick(1)}
+                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
+                  >
+                    1
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRatingClick(2)}
+                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
+                  >
+                    2
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRatingClick(3)}
+                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
+                  >
+                    3
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRatingClick(4)}
+                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
+                  >
+                    4
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRatingClick(5)}
+                    className="px-2 py-1 text-sm font-semibold text-white hover:bg-gray-700 rounded transition-colors"
+                  >
+                    5
+                  </button>
                 </div>
               ) : (
-                <span className="text-gray-500 text-sm">평점을 주세요</span>
+                <div className="flex items-center space-x-3">
+                  <span className="text-gray-500 text-sm">평점을 입력하세요:</span>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => handleRatingClick(1)}
+                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    >
+                      1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRatingClick(2)}
+                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    >
+                      2
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRatingClick(3)}
+                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    >
+                      3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRatingClick(4)}
+                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    >
+                      4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRatingClick(5)}
+                      className="px-2 py-1 text-sm font-semibold text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+                    >
+                      5
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
             
-            <div 
-              className="flex items-center space-x-1 cursor-pointer"
-              onMouseLeave={() => setHoverRating(0)}
-            >
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <button
-                  key={rating}
-                  type="button"
-                  onClick={() => handleRatingClick(rating)}
-                  onMouseEnter={() => setHoverRating(rating)}
-                  className="focus:outline-none transition-colors duration-150"
-                >
-                  <StarIcon filled={rating <= (hoverRating || myRating || 0)} />
-                </button>
-              ))}
-            </div>
+            {myRating && (
+              <div className="flex items-center space-x-1 text-sm text-gray-400">
+                <span>평균</span>
+                <span className="text-white font-semibold">{averageRating.toFixed(1)}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

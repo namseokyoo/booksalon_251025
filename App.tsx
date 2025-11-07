@@ -23,7 +23,6 @@ const App = () => {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
   const { loading } = useAuth();
 
   const handleSelectForum = (forum: Forum) => {
@@ -78,6 +77,8 @@ const App = () => {
       </div>
     );
   }
+
+  // OIDC로 전환: 별도 콜백 페이지 불필요
 
   return (
     <div className="min-h-screen bg-gray-900">

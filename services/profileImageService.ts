@@ -54,20 +54,28 @@ export class ProfileImageService {
 
     // 기본 프로필 이미지 URL 생성 (이니셜 기반)
     static generateDefaultProfileImageUrl(nickname: string): string {
-        const initial = nickname.charAt(0).toUpperCase();
-        const colors = [
-            'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
-            'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
+        const safeName = (nickname || 'U').trim();
+        const initial = safeName.charAt(0).toUpperCase() || 'U';
+
+        // Tailwind 클래스가 아니라 실제 HEX 팔레트 사용 (WCAG 대비 양호 색상)
+        const colorHexList = [
+            'EF4444', // red-500
+            '3B82F6', // blue-500
+            '10B981', // green-500
+            'F59E0B', // yellow-500
+            '8B5CF6', // violet-500
+            'EC4899', // pink-500
+            '6366F1', // indigo-500
+            '14B8A6'  // teal-500
         ];
 
-        // 닉네임의 첫 글자로 색상 결정
-        const colorIndex = initial.charCodeAt(0) % colors.length;
-        const color = colors[colorIndex];
+        const code = initial.charCodeAt(0) || 65; // fallback 'A'
+        const colorHex = colorHexList[code % colorHexList.length];
 
         // SVG 데이터 URL 생성
         const svg = `
       <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" fill="#${color.replace('bg-', '').replace('-500', '')}" />
+        <rect width="40" height="40" fill="#${colorHex}" />
         <text x="20" y="26" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">${initial}</text>
       </svg>
     `;

@@ -78,8 +78,14 @@ const Header: React.FC<HeaderProps> = ({
     };
 
     const getDisplayName = () => {
-        if (!userProfile) return currentUser?.email?.split('@')[0] || '사용자';
-        return userProfile.nickname || userProfile.displayName || userProfile.email.split('@')[0];
+        // userProfile 우선, 없으면 Firebase 사용자 정보에서 안전하게 파생
+        if (userProfile) {
+            const base = userProfile.nickname || userProfile.displayName || userProfile.email || '사용자';
+            return base;
+        }
+        const email = currentUser?.email;
+        if (email && email.includes('@')) return email.split('@')[0];
+        return currentUser?.displayName || '사용자';
     };
 
     const getProfileImageUrl = () => {

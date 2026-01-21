@@ -49,24 +49,24 @@ const PostListItem: React.FC<PostListItemProps> = ({ post, onPostClick, onUserCl
 
     if (isLoading) {
         return (
-            <div className="bg-gray-800 p-4 rounded-lg animate-pulse">
-                <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+            <div className="bg-white border border-gray-200 p-4 rounded-xl animate-pulse shadow-sm">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
             </div>
         );
     }
 
     return (
         <div
-            className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors duration-200"
+            className="bg-white border border-gray-200 p-4 rounded-xl hover:shadow-md hover:border-cyan-300 cursor-pointer transition-all duration-200 shadow-sm"
             onClick={() => onPostClick(post)}
         >
             <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white truncate mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 truncate mb-2">
                         {post.title}
                     </h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-400">
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
                         <div className="relative">
                             <button
                                 onClick={(e) => {
@@ -75,12 +75,12 @@ const PostListItem: React.FC<PostListItemProps> = ({ post, onPostClick, onUserCl
                                         onUserClick(authorProfile);
                                     }
                                 }}
-                                className="hover:text-cyan-400 transition-colors"
+                                className="hover:text-cyan-600 transition-colors font-medium"
                             >
                                 {getDisplayName()}
                             </button>
                         </div>
-                        <span>{formatTime(post.createdAt)}</span>
+                        <span className="text-gray-500">{formatTime(post.createdAt)}</span>
                         <div className="flex items-center space-x-3">
                             <span className="flex items-center space-x-1">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -63,7 +63,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
 
   const StarIcon = ({ filled }: { filled: boolean }) => (
     <svg
-      className={`w-4 h-4 ${filled ? 'text-yellow-400' : 'text-gray-600'}`}
+      className={`w-4 h-4 ${filled ? 'text-amber-500' : 'text-gray-300'}`}
       fill="currentColor"
       viewBox="0 0 20 20"
     >
@@ -72,21 +72,21 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
+    <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm">
       <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4">
         <img
           src={book.thumbnail || 'https://picsum.photos/120/174'}
           alt={book.title}
-          className="w-20 h-auto sm:w-24 sm:h-auto lg:w-32 lg:h-auto rounded-md shadow-lg flex-shrink-0 mx-auto sm:mx-0"
+          className="w-20 h-auto sm:w-24 sm:h-auto lg:w-32 lg:h-auto rounded-lg shadow-md flex-shrink-0 mx-auto sm:mx-0"
         />
         <div className="flex-grow text-center sm:text-left w-full">
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{book.title}</h2>
-          <p className="text-sm sm:text-md text-gray-400 mt-1">{book.authors.join(', ')}</p>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{book.title}</h2>
+          <p className="text-sm sm:text-md text-gray-600 mt-1">{book.authors.join(', ')}</p>
           <p className="text-xs sm:text-sm text-gray-500">{book.publisher}</p>
           
           {/* 평점 표시 */}
           {(averageRating > 0 || totalRatings > 0) && (
-            <div className="mt-2 flex items-center space-x-2 text-sm text-gray-300">
+            <div className="mt-2 flex items-center space-x-2 text-sm text-gray-700">
               <div className="flex items-center space-x-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <StarIcon 
@@ -101,38 +101,38 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
             </div>
           )}
 
-          <p className="text-xs sm:text-sm text-gray-300 mt-2 sm:mt-3 line-clamp-2 sm:line-clamp-3">{book.contents}</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 line-clamp-2 sm:line-clamp-3">{book.contents}</p>
         </div>
       </div>
 
       {/* 내 평점 선택 UI */}
       {currentUser && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-gray-200">
           {!isEditing && myRating && (
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div>
-                  <span className="text-sm text-gray-300">내 평점</span>
+                  <span className="text-sm text-gray-700 font-medium">내 평점</span>
                   <div className="flex items-center space-x-2 mt-1">
                     <div className="flex items-center space-x-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <StarIcon key={star} filled={star <= myRating} />
                       ))}
                     </div>
-                    <span className="text-2xl font-bold text-white">{myRating}.0</span>
+                    <span className="text-2xl font-bold text-gray-900">{myRating}.0</span>
                   </div>
                 </div>
                 {averageRating > 0 && (
-                  <div className="flex items-center space-x-1 text-sm text-gray-400">
+                  <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <span>평균</span>
-                    <span className="text-white font-semibold text-lg">{averageRating.toFixed(1)}</span>
+                    <span className="text-gray-900 font-semibold text-lg">{averageRating.toFixed(1)}</span>
                   </div>
                 )}
               </div>
               <button
                 type="button"
                 onClick={handleEditClick}
-                className="px-3 py-1 text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-600 rounded hover:bg-cyan-600/10 transition-colors"
+                className="px-3 py-1 text-sm text-cyan-600 hover:text-cyan-700 border border-cyan-300 rounded-lg hover:bg-cyan-50 transition-colors"
               >
                 수정
               </button>
@@ -142,7 +142,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
           {(!myRating || isEditing) && (
             <div>
               <div className="mb-3">
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-gray-700 font-medium">
                   {myRating ? '평점 수정' : '평점을 입력하세요'}
                 </span>
               </div>
@@ -152,7 +152,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
                     key={rating}
                     type="button"
                     onClick={() => handleRatingClick(rating)}
-                    className="w-12 h-12 text-xl font-bold text-gray-400 hover:text-white hover:bg-gray-700 border-2 border-gray-600 hover:border-cyan-500 rounded-lg transition-all"
+                    className="w-12 h-12 text-xl font-bold text-gray-500 hover:text-gray-900 hover:bg-cyan-50 border-2 border-gray-300 hover:border-cyan-500 rounded-lg transition-all"
                   >
                     {rating}
                   </button>
@@ -162,7 +162,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="mt-3 px-3 py-1 text-sm text-gray-400 hover:text-gray-300"
+                  className="mt-3 px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
                 >
                   취소
                 </button>

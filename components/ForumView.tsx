@@ -124,8 +124,8 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessag
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="p-3 sm:p-6 lg:p-8 sticky top-[65px] bg-gray-900 z-10">
-        <button onClick={onBack} className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-400 hover:text-white mb-3 sm:mb-4 transition-colors duration-200">
+      <div className="p-3 sm:p-6 lg:p-8 sticky top-[65px] bg-white border-b border-gray-200 z-10 shadow-sm">
+        <button onClick={onBack} className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 mb-3 sm:mb-4 transition-colors duration-200">
           <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>목록으로 돌아가기</span>
         </button>

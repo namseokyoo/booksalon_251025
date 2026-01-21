@@ -11,7 +11,6 @@ import { UserProfileService } from '../services/userProfile';
 import { BookmarkService } from '../services/bookmarkService';
 import { FilterService, type FilterOptions } from '../services/filterService';
 import { BookmarkIcon } from './icons/BookmarkIcon';
-import FilterPanel from './FilterPanel';
 
 interface ForumListProps {
   onSelectForum: (forum: Forum) => void;
@@ -29,7 +28,15 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({});
   const [filteredForums, setFilteredForums] = useState<Forum[]>([]);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const { currentUser } = useAuth();
+
+  const sortOptions = [
+    { value: 'recent', label: '최신순' },
+    { value: 'popular', label: '인기순' },
+    { value: 'posts', label: '게시물순' },
+    { value: 'title', label: '제목순' },
+  ];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'forums'), snapshot => {
@@ -172,10 +179,16 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
   };
 
   const handleCreateForum = async (book: Book) => {
+    const category = FilterService.categorizeBook(book);
+    const tags = FilterService.generateTags(book);
     const newForum: Forum = {
       isbn: book.isbn,
       book,
       postCount: 0,
+      category,
+      tags,
+      lastActivityAt: new Date(),
+      popularity: 0,
     };
     await setDoc(doc(db, 'forums', book.isbn), newForum);
 
@@ -186,6 +199,39 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
 
     setSearchResult(null);
     onSelectForum(newForum);
+  };
+
+  const handleSelectCategory = (category?: string) => {
+    setFilterOptions(prev => ({
+      ...prev,
+      category: category === '전체' ? undefined : category,
+    }));
+  };
+
+  const handleToggleTag = (tag: string) => {
+    setFilterOptions(prev => {
+      const current = prev.tags || [];
+      const exists = current.includes(tag);
+      return {
+        ...prev,
+        tags: exists ? current.filter(t => t !== tag) : [...current, tag],
+      };
+    });
+  };
+
+  const handleSortChange = (sortBy: FilterOptions['sortBy']) => {
+    setFilterOptions(prev => ({
+      ...prev,
+      sortBy,
+    }));
+  };
+
+  const handleResetFilters = () => {
+    setFilterOptions({});
+  };
+
+  const hasActiveFilters = () => {
+    return !!(filterOptions.category || (filterOptions.tags && filterOptions.tags.length > 0) || filterOptions.sortBy);
   };
 
   return (
@@ -224,11 +270,111 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
         {error && <p className="mt-2 text-xs sm:text-sm text-red-500">{error}</p>}
       </form>
 
-      {/* 필터 패널 - 비활성화 */}
-      {/* <FilterPanel
-        onFilterChange={setFilterOptions}
-        currentOptions={filterOptions}
-      /> */}
+      {/* 컴팩트 필터 바 */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+        {/* 필터 헤더 (항상 표시) */}
+        <button
+          onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+          className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-900">필터</span>
+            {hasActiveFilters() && (
+              <span className="px-2 py-0.5 text-xs bg-cyan-100 text-cyan-700 rounded-full font-medium">
+                활성
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {hasActiveFilters() && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleResetFilters();
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                초기화
+              </button>
+            )}
+            <svg
+              className={`w-5 h-5 text-gray-600 transition-transform ${isFilterExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
+
+        {/* 필터 내용 (접기/펼치기) */}
+        {isFilterExpanded && (
+          <div className="border-t border-gray-200 p-3 sm:p-4 space-y-4">
+            {/* 카테고리 */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">카테고리</label>
+              <div className="flex flex-wrap gap-2">
+                {['전체', ...FilterService.CATEGORIES].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => handleSelectCategory(cat)}
+                    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                      (filterOptions.category || '전체') === cat
+                        ? 'border-cyan-500 bg-cyan-50 text-cyan-700 font-semibold'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-cyan-200 hover:text-cyan-700'
+                    }`}
+                    type="button"
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 태그 */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">태그</label>
+              <div className="flex flex-wrap gap-2">
+                {FilterService.POPULAR_TAGS.map(tag => {
+                  const active = (filterOptions.tags || []).includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      onClick={() => handleToggleTag(tag)}
+                      type="button"
+                      className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                        active
+                          ? 'border-cyan-500 bg-cyan-50 text-cyan-700 font-semibold'
+                          : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-cyan-200 hover:text-cyan-700'
+                      }`}
+                    >
+                      #{tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 정렬 */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">정렬</label>
+              <select
+                value={filterOptions.sortBy || 'recent'}
+                onChange={(e) => handleSortChange(e.target.value as FilterOptions['sortBy'])}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+              >
+                {sortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 북마크한 살롱 표시 */}
       {bookmarkedForums.length > 0 && (

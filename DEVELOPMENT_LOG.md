@@ -346,3 +346,26 @@ file-share-service/
 ---
 
 *이 개발 로그는 프로젝트의 진행 상황과 주요 변경사항을 추적하기 위해 작성되었습니다.*
+
+## 2026-01-21
+
+- 프로젝트 상태 점검 및 배포 페이지 확인
+- Firebase Hosting 설정 재확인 (public=dist, SPA rewrites)
+- 버전 관리 체계 수립: package.json 버전 0.1.0, CHANGELOG.md / VERSION.md 추가
+- 다크 테마 → 라이트 테마 전환 완료 (글로벌 및 주요 컴포넌트)
+- Stitch 스크린 6종 생성 및 UI 정합성 검토
+- 릴리즈 브랜치 release/v0.1.0 생성, 태깅, main 병합
+- QA 보고서: QnA-lite 방향 분석 및 개선 제안
+
+## 2026-01-22
+
+- ForumList 인라인 칩 필터 UI 적용(카테고리/태그/정렬, 초기화)
+- 살롱 생성 시 카테고리/태그 자동 부여 및 lastActivityAt/popularity 초기화
+- 커뮤니티 전체 검색(MVP) 추가: 살롱/게시글/댓글 통합 키워드 검색
+- FUTURE_IMPROVEMENTS.md 작성: 검색 정확도/성능, 필터 UX, 성능/검색 UX 고도화 로드맵 정리
+- 로컬 개발서버 포트 3000으로 구동 확인, 필터 및 커뮤니티 검색 UI 스모크 테스트
+- 필터 UI 개선: 접을 수 있는 형태로 변경 (모바일 최적화)
+- 통합 검색 모달 컴포넌트 생성 및 헤더 연동
+- Firestore collectionGroup 쿼리 권한 문제 해결 및 규칙 배포
+- 검색 서비스 개선: collectionGroup 대신 각 포럼 순회 방식으로 변경
+- 버전 0.2.0 업데이트 및 깃허브 정리

@@ -14,6 +14,7 @@ import { useAuth } from './contexts/AuthContext';
 import LoginModal from './components/LoginModal';
 import SignUpModal from './components/SignUpModal';
 import DeleteAccountModal from './components/DeleteAccountModal';
+import SearchModal from './components/SearchModal';
 
 const App = () => {
   const [currentView, setCurrentView] = useState<'list' | 'forum' | 'profile' | 'activity' | 'search' | 'messaging' | 'notifications' | 'admin'>('list');
@@ -23,7 +24,8 @@ const App = () => {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const { loading } = useAuth();
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const { loading, currentUser } = useAuth();
 
   const handleSelectForum = (forum: Forum) => {
     setSelectedForum(forum);
@@ -45,8 +47,35 @@ const App = () => {
   };
 
   const handleShowSearch = () => {
-    setCurrentView('search');
-    setSelectedForum(null);
+    setSearchModalOpen(true);
+  };
+
+  const handleCreateForumFromSearch = async (book: Book) => {
+    const { db } = await import('./services/firebase');
+    const { doc, setDoc } = await import('firebase/firestore');
+    const { FilterService } = await import('./services/filterService');
+    const { UserProfileService } = await import('./services/userProfile');
+    
+    const category = FilterService.categorizeBook(book);
+    const tags = FilterService.generateTags(book);
+    const newForum: Forum = {
+      isbn: book.isbn,
+      book,
+      postCount: 0,
+      category,
+      tags,
+      lastActivityAt: new Date(),
+      popularity: 0,
+    };
+    await setDoc(doc(db, 'forums', book.isbn), newForum);
+    
+    // 사용자 통계 업데이트
+    if (currentUser) {
+      await UserProfileService.updateUserStats(currentUser.uid, 'forum', true);
+    }
+    
+    setSelectedForum(newForum);
+    setCurrentView('forum');
   };
 
   const handleShowMessaging = () => {
@@ -131,6 +160,14 @@ const App = () => {
       {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
       {signupModalOpen && <SignUpModal onClose={() => setSignupModalOpen(false)} />}
       {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
+      {searchModalOpen && (
+        <SearchModal
+          isOpen={searchModalOpen}
+          onClose={() => setSearchModalOpen(false)}
+          onSelectForum={handleSelectForum}
+          onCreateForum={handleCreateForumFromSearch}
+        />
+      )}
     </div>
   );
 };

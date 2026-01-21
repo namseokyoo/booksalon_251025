@@ -419,7 +419,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
                 <div
                   key={forum.isbn}
                   onClick={() => onSelectForum(forum)}
-                  className="bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md hover:bg-gray-700 cursor-pointer transition-colors duration-200 flex items-start sm:items-center space-x-3 sm:space-x-4"
+                  className="bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md hover:bg-gray-700 cursor-pointer transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex items-start sm:items-center space-x-3 sm:space-x-4"
                 >
                   <img
                     src={forum.book.thumbnail}

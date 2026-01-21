@@ -2,10 +2,13 @@
 
 > 책을 중심으로 한 지식 공유 및 토론 커뮤니티 플랫폼
 
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/namseokyoo/booksalon_251025/releases)
 [![React](https://img.shields.io/badge/React-19.2.0-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-v12-orange.svg)](https://firebase.google.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0-38B2AC.svg)](https://tailwindcss.com/)
+
+**현재 버전**: `0.1.0` (베타) | [변경사항 보기](./CHANGELOG.md) | [버전 관리 가이드](./VERSION.md)
 
 ## 🎯 서비스 소개
 

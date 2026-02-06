@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfileService } from '../services/userProfile';
 import { BookmarkService } from '../services/bookmarkService';
@@ -12,7 +13,11 @@ interface ProfilePageProps {
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
+    const { userId: paramUserId } = useParams<{ userId: string }>();
     const { currentUser } = useAuth();
+    // 타인 프로필 조회인지 판별: paramUserId가 있고 현재 유저와 다르면 타인 프로필
+    const isOwnProfile = !paramUserId || (currentUser?.uid === paramUserId);
+    const targetUserId = paramUserId || currentUser?.uid;
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -32,21 +37,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     });
 
     useEffect(() => {
-        if (currentUser) {
+        if (targetUserId) {
             loadUserData();
         }
-    }, [currentUser]);
+    }, [targetUserId]);
 
     const loadUserData = async () => {
-        if (!currentUser) return;
+        if (!targetUserId) return;
 
         try {
             setLoading(true);
             const [profileData, postsData, commentsData, bookmarksData] = await Promise.all([
-                UserProfileService.getUserProfile(currentUser.uid),
-                UserProfileService.getUserPosts(currentUser.uid),
-                UserProfileService.getUserComments(currentUser.uid),
-                BookmarkService.getBookmarkedForums(currentUser.uid)
+                UserProfileService.getUserProfile(targetUserId),
+                UserProfileService.getUserPosts(targetUserId),
+                UserProfileService.getUserComments(targetUserId),
+                BookmarkService.getBookmarkedForums(targetUserId)
             ]);
 
             setProfile(profileData);
@@ -160,12 +165,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                     >
                         ← 돌아가기
                     </button>
-                    <button
-                        onClick={() => setIsEditing(!isEditing)}
-                        className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors font-medium"
-                    >
-                        {isEditing ? '취소' : '프로필 편집'}
-                    </button>
+                    {isOwnProfile && (
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors font-medium"
+                        >
+                            {isEditing ? '취소' : '프로필 편집'}
+                        </button>
+                    )}
                 </div>
 
                 {/* 프로필 정보 */}

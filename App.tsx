@@ -1,24 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router';
 import { Toaster } from 'sonner';
 import Header from './components/Header';
 import ForumList from './components/ForumList';
-import ForumView from './components/ForumView';
-import ProfilePage from './components/ProfilePage';
-import ActivityFeed from './components/ActivityFeed';
-import MessagingPage from './components/MessagingPage';
-import NotificationComponent from './components/NotificationComponent';
-import AdminDashboard from './components/AdminDashboard';
 import RequireAuth from './components/RequireAuth';
 import AdminRoute from './components/AdminRoute';
 import type { Forum, Book } from './types';
 import { useAuth } from './contexts/AuthContext';
 import { LoginModalProvider, useLoginModal } from './contexts/LoginModalContext';
-import LoginModal from './components/LoginModal';
-import SignUpModal from './components/SignUpModal';
-import DeleteAccountModal from './components/DeleteAccountModal';
-import SearchModal from './components/SearchModal';
+
+// Lazy loaded route components
+const ForumView = lazy(() => import('./components/ForumView'));
+const ProfilePage = lazy(() => import('./components/ProfilePage'));
+const ActivityFeed = lazy(() => import('./components/ActivityFeed'));
+const MessagingPage = lazy(() => import('./components/MessagingPage'));
+const NotificationComponent = lazy(() => import('./components/NotificationComponent'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+
+// Lazy loaded modals
+const LoginModal = lazy(() => import('./components/LoginModal'));
+const SignUpModal = lazy(() => import('./components/SignUpModal'));
+const DeleteAccountModal = lazy(() => import('./components/DeleteAccountModal'));
+const SearchModal = lazy(() => import('./components/SearchModal'));
 
 const AppContent = () => {
   const navigate = useNavigate();
@@ -104,6 +108,12 @@ const AppContent = () => {
     );
   }
 
+  const suspenseFallback = (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -123,42 +133,58 @@ const AppContent = () => {
           {/* 공개 라우트 */}
           <Route path="/" element={<ForumList onSelectForum={handleSelectForum} onLoginRequired={openLoginModal} />} />
           <Route path="/forum/:isbn" element={
-            <ForumView
-              onBack={handleBackToList}
-              onNavigateToMessaging={(userId) => {
-                navigate(`/messages?userId=${userId}`);
-              }}
-              onLoginRequired={openLoginModal}
-            />
+            <Suspense fallback={suspenseFallback}>
+              <ForumView
+                onBack={handleBackToList}
+                onNavigateToMessaging={(userId) => {
+                  navigate(`/messages?userId=${userId}`);
+                }}
+                onLoginRequired={openLoginModal}
+              />
+            </Suspense>
           } />
-          <Route path="/profile/:userId" element={<ProfilePage onBack={handleBackToList} />} />
+          <Route path="/profile/:userId" element={
+            <Suspense fallback={suspenseFallback}>
+              <ProfilePage onBack={handleBackToList} />
+            </Suspense>
+          } />
 
           {/* 인증 필요 라우트 */}
           <Route path="/profile" element={
             <RequireAuth onLoginRequired={openLoginModal}>
-              <ProfilePage onBack={handleBackToList} />
+              <Suspense fallback={suspenseFallback}>
+                <ProfilePage onBack={handleBackToList} />
+              </Suspense>
             </RequireAuth>
           } />
           <Route path="/activity" element={
             <RequireAuth onLoginRequired={openLoginModal}>
-              <ActivityFeed onBack={handleBackToList} />
+              <Suspense fallback={suspenseFallback}>
+                <ActivityFeed onBack={handleBackToList} />
+              </Suspense>
             </RequireAuth>
           } />
           <Route path="/messages" element={
             <RequireAuth onLoginRequired={openLoginModal}>
-              <MessagingPage />
+              <Suspense fallback={suspenseFallback}>
+                <MessagingPage />
+              </Suspense>
             </RequireAuth>
           } />
           <Route path="/notifications" element={
             <RequireAuth onLoginRequired={openLoginModal}>
-              <NotificationComponent />
+              <Suspense fallback={suspenseFallback}>
+                <NotificationComponent />
+              </Suspense>
             </RequireAuth>
           } />
 
           {/* 관리자 전용 라우트 */}
           <Route path="/admin" element={
             <AdminRoute>
-              <AdminDashboard />
+              <Suspense fallback={suspenseFallback}>
+                <AdminDashboard />
+              </Suspense>
             </AdminRoute>
           } />
 
@@ -174,16 +200,30 @@ const AppContent = () => {
         </Routes>
       </main>
 
-      {isLoginModalOpen && <LoginModal onClose={closeLoginModal} />}
-      {signupModalOpen && <SignUpModal onClose={() => setSignupModalOpen(false)} />}
-      {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
+      {isLoginModalOpen && (
+        <Suspense fallback={null}>
+          <LoginModal onClose={closeLoginModal} />
+        </Suspense>
+      )}
+      {signupModalOpen && (
+        <Suspense fallback={null}>
+          <SignUpModal onClose={() => setSignupModalOpen(false)} />
+        </Suspense>
+      )}
+      {deleteModalOpen && (
+        <Suspense fallback={null}>
+          <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />
+        </Suspense>
+      )}
       {searchModalOpen && (
-        <SearchModal
-          isOpen={searchModalOpen}
-          onClose={() => setSearchModalOpen(false)}
-          onSelectForum={handleSelectForum}
-          onCreateForum={handleCreateForumFromSearch}
-        />
+        <Suspense fallback={null}>
+          <SearchModal
+            isOpen={searchModalOpen}
+            onClose={() => setSearchModalOpen(false)}
+            onSelectForum={handleSelectForum}
+            onCreateForum={handleCreateForumFromSearch}
+          />
+        </Suspense>
       )}
       <Toaster position="top-center" richColors closeButton />
     </div>

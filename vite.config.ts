@@ -18,6 +18,19 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom', 'react-router'],
+              'vendor-firebase-core': ['firebase/app'],
+              'vendor-firebase-firestore': ['firebase/firestore'],
+              'vendor-firebase-auth': ['firebase/auth'],
+              'vendor-firebase-storage': ['firebase/storage'],
+            }
+          }
+        }
       }
     };
 });

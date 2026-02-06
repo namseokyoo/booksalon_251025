@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router';
 import type { Forum, Post, UserProfile } from '../types';
 import BookInfo from './BookInfo';
 import PostList from './PostList';
@@ -14,12 +15,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserProfileService } from '../services/userProfile';
 
 interface ForumViewProps {
-  forum: Forum;
   onBack: () => void;
   onNavigateToMessaging?: (userId: string) => void;
+  onLoginRequired?: () => void;
 }
 
-const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessaging }) => {
+const ForumView: React.FC<ForumViewProps> = ({ onBack, onNavigateToMessaging, onLoginRequired }) => {
+  const { isbn } = useParams<{ isbn: string }>();
+  const [forum, setForum] = useState<Forum | null>(null);
+  const [forumLoading, setForumLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -28,25 +32,55 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessag
   const [showUserProfile, setShowUserProfile] = useState(false);
   const { currentUser } = useAuth();
 
+  // 포럼 데이터 로드
   useEffect(() => {
-    if (!forum.isbn) return;
+    if (!isbn) return;
+
+    setForumLoading(true);
+    const unsubscribe = onSnapshot(doc(db, 'forums', isbn), (docSnap) => {
+      if (docSnap.exists()) {
+        setForum({ isbn: docSnap.id, ...docSnap.data() } as Forum);
+      } else {
+        setForum(null);
+      }
+      setForumLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [isbn]);
+
+  // 게시물 로드
+  useEffect(() => {
+    if (!isbn) return;
     const unsubscribe = onSnapshot(
-      query(collection(db, 'forums', forum.isbn, 'posts'), orderBy('createdAt', 'desc')),
+      query(collection(db, 'forums', isbn, 'posts'), orderBy('createdAt', 'desc')),
       snapshot => {
         const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Post[];
         setPosts(postsData);
       });
     return () => unsubscribe();
-  }, [forum.isbn]);
+  }, [isbn]);
+
+  const handleWriteClick = () => {
+    if (!currentUser) {
+      if (onLoginRequired) {
+        onLoginRequired();
+      }
+      return;
+    }
+    setIsModalOpen(true);
+  };
 
   const handleAddPost = async (title: string, content: string) => {
-    if (!currentUser) {
-      alert("글을 작성하려면 로그인이 필요합니다.");
+    if (!currentUser || !isbn) {
+      if (onLoginRequired) {
+        onLoginRequired();
+      }
       return;
     }
 
-    const forumRef = doc(db, 'forums', forum.isbn);
-    const postsRef = collection(db, 'forums', forum.isbn, 'posts');
+    const forumRef = doc(db, 'forums', isbn);
+    const postsRef = collection(db, 'forums', isbn, 'posts');
 
     const newPost = {
       title,
@@ -110,6 +144,25 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessag
     setSelectedPost(null);
   };
 
+  if (forumLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+      </div>
+    );
+  }
+
+  if (!forum) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-900">해당 살롱을 찾을 수 없습니다.</p>
+        <button onClick={onBack} className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
+          목록으로 돌아가기
+        </button>
+      </div>
+    );
+  }
+
   if (selectedPost) {
     return (
       <PostDetail
@@ -141,10 +194,9 @@ const ForumView: React.FC<ForumViewProps> = ({ forum, onBack, onNavigateToMessag
       </div>
 
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleWriteClick}
         className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-cyan-600 text-white rounded-full p-3 sm:p-4 shadow-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 z-30 transition-colors duration-200"
         aria-label="Write a new post"
-        disabled={!currentUser}
         title={!currentUser ? "로그인이 필요합니다" : "새로운 글 작성"}
       >
         <PlusIcon className="h-5 w-5 sm:h-6 sm:w-6" />

@@ -14,9 +14,10 @@ import { BookmarkIcon } from './icons/BookmarkIcon';
 
 interface ForumListProps {
   onSelectForum: (forum: Forum) => void;
+  onLoginRequired?: () => void;
 }
 
-const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
+const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired }) => {
   const [forums, setForums] = useState<Forum[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +102,9 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
     e.stopPropagation(); // 포럼 클릭 이벤트 방지
 
     if (!currentUser) {
-      alert('북마크하려면 로그인이 필요합니다.');
+      if (onLoginRequired) {
+        onLoginRequired();
+      }
       return;
     }
 
@@ -179,6 +182,13 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum }) => {
   };
 
   const handleCreateForum = async (book: Book) => {
+    if (!currentUser) {
+      if (onLoginRequired) {
+        onLoginRequired();
+      }
+      return;
+    }
+
     const category = FilterService.categorizeBook(book);
     const tags = FilterService.generateTags(book);
     const newForum: Forum = {

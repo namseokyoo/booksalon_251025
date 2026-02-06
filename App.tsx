@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { Routes, Route, useNavigate } from 'react-router';
 import Header from './components/Header';
 import ForumList from './components/ForumList';
 import ForumView from './components/ForumView';
 import ProfilePage from './components/ProfilePage';
 import ActivityFeed from './components/ActivityFeed';
-import UserSearch from './components/UserSearch';
 import MessagingPage from './components/MessagingPage';
 import NotificationComponent from './components/NotificationComponent';
 import AdminDashboard from './components/AdminDashboard';
+import RequireAuth from './components/RequireAuth';
+import AdminRoute from './components/AdminRoute';
 import type { Forum, Book } from './types';
 import { useAuth } from './contexts/AuthContext';
 import LoginModal from './components/LoginModal';
@@ -17,33 +19,31 @@ import DeleteAccountModal from './components/DeleteAccountModal';
 import SearchModal from './components/SearchModal';
 
 const App = () => {
-  const [currentView, setCurrentView] = useState<'list' | 'forum' | 'profile' | 'activity' | 'search' | 'messaging' | 'notifications' | 'admin'>('list');
-  const [selectedForum, setSelectedForum] = useState<Forum | null>(null);
-  const [messagingTargetUserId, setMessagingTargetUserId] = useState<string | null>(null);
-
+  const navigate = useNavigate();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const { loading, currentUser } = useAuth();
 
+  const openLoginModal = useCallback(() => {
+    setLoginModalOpen(true);
+  }, []);
+
   const handleSelectForum = (forum: Forum) => {
-    setSelectedForum(forum);
-    setCurrentView('forum');
+    navigate(`/forum/${forum.isbn}`);
   };
 
   const handleHomeClick = () => {
-    setCurrentView('list');
-    setSelectedForum(null);
+    navigate('/');
   };
 
   const handleShowProfile = () => {
-    setCurrentView('profile');
+    navigate('/profile');
   };
 
   const handleShowActivity = () => {
-    setCurrentView('activity');
-    setSelectedForum(null);
+    navigate('/activity');
   };
 
   const handleShowSearch = () => {
@@ -51,11 +51,16 @@ const App = () => {
   };
 
   const handleCreateForumFromSearch = async (book: Book) => {
+    if (!currentUser) {
+      setLoginModalOpen(true);
+      return;
+    }
+
     const { db } = await import('./services/firebase');
     const { doc, setDoc } = await import('firebase/firestore');
     const { FilterService } = await import('./services/filterService');
     const { UserProfileService } = await import('./services/userProfile');
-    
+
     const category = FilterService.categorizeBook(book);
     const tags = FilterService.generateTags(book);
     const newForum: Forum = {
@@ -68,35 +73,29 @@ const App = () => {
       popularity: 0,
     };
     await setDoc(doc(db, 'forums', book.isbn), newForum);
-    
+
     // 사용자 통계 업데이트
     if (currentUser) {
       await UserProfileService.updateUserStats(currentUser.uid, 'forum', true);
     }
-    
-    setSelectedForum(newForum);
-    setCurrentView('forum');
+
+    navigate(`/forum/${book.isbn}`);
   };
 
   const handleShowMessaging = () => {
-    setMessagingTargetUserId(null); // 일반 메시징 페이지로 이동
-    setCurrentView('messaging');
-    setSelectedForum(null);
+    navigate('/messages');
   };
 
   const handleShowNotifications = () => {
-    setCurrentView('notifications');
-    setSelectedForum(null);
+    navigate('/notifications');
   };
 
   const handleShowAdmin = () => {
-    setCurrentView('admin');
-    setSelectedForum(null);
+    navigate('/admin');
   };
 
   const handleBackToList = () => {
-    setSelectedForum(null);
-    setCurrentView('list');
+    navigate('/');
   };
 
   if (loading) {
@@ -106,8 +105,6 @@ const App = () => {
       </div>
     );
   }
-
-  // OIDC로 전환: 별도 콜백 페이지 불필요
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,37 +121,59 @@ const App = () => {
         onHomeClick={handleHomeClick}
       />
       <main>
-        {currentView === 'list' ? (
-          <ForumList onSelectForum={handleSelectForum} />
-        ) : currentView === 'profile' ? (
-          <ProfilePage onBack={handleBackToList} />
-        ) : currentView === 'activity' ? (
-          <ActivityFeed onBack={handleBackToList} />
-        ) : currentView === 'search' ? (
-          <UserSearch onBack={handleBackToList} />
-        ) : currentView === 'messaging' ? (
-          <MessagingPage targetUserId={messagingTargetUserId || undefined} />
-        ) : currentView === 'notifications' ? (
-          <NotificationComponent />
-        ) : currentView === 'admin' ? (
-          <AdminDashboard />
-        ) : selectedForum ? (
-          <ForumView
-            forum={selectedForum}
-            onBack={handleBackToList}
-            onNavigateToMessaging={(userId) => {
-              setMessagingTargetUserId(userId);
-              setCurrentView('messaging');
-            }}
-          />
-        ) : (
-          <div className="text-center p-8">
-            <p className="text-gray-900">오류: 해당 살롱을 찾을 수 없습니다.</p>
-            <button onClick={handleBackToList} className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
-              목록으로 돌아가기
-            </button>
-          </div>
-        )}
+        <Routes>
+          {/* 공개 라우트 */}
+          <Route path="/" element={<ForumList onSelectForum={handleSelectForum} onLoginRequired={openLoginModal} />} />
+          <Route path="/forum/:isbn" element={
+            <ForumView
+              onBack={handleBackToList}
+              onNavigateToMessaging={(userId) => {
+                navigate(`/messages?userId=${userId}`);
+              }}
+              onLoginRequired={openLoginModal}
+            />
+          } />
+          <Route path="/profile/:userId" element={<ProfilePage onBack={handleBackToList} />} />
+
+          {/* 인증 필요 라우트 */}
+          <Route path="/profile" element={
+            <RequireAuth onLoginRequired={openLoginModal}>
+              <ProfilePage onBack={handleBackToList} />
+            </RequireAuth>
+          } />
+          <Route path="/activity" element={
+            <RequireAuth onLoginRequired={openLoginModal}>
+              <ActivityFeed onBack={handleBackToList} />
+            </RequireAuth>
+          } />
+          <Route path="/messages" element={
+            <RequireAuth onLoginRequired={openLoginModal}>
+              <MessagingPage />
+            </RequireAuth>
+          } />
+          <Route path="/notifications" element={
+            <RequireAuth onLoginRequired={openLoginModal}>
+              <NotificationComponent />
+            </RequireAuth>
+          } />
+
+          {/* 관리자 전용 라우트 */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+
+          {/* 404 */}
+          <Route path="*" element={
+            <div className="text-center p-8">
+              <p className="text-gray-900">페이지를 찾을 수 없습니다.</p>
+              <button onClick={handleBackToList} className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
+                목록으로 돌아가기
+              </button>
+            </div>
+          } />
+        </Routes>
       </main>
 
       {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}

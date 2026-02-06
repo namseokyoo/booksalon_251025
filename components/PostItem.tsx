@@ -8,9 +8,11 @@ import { ko } from 'date-fns/locale';
 import { db } from '../services/firebase';
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 import { UserProfileService } from '../services/userProfile';
 import { SocialService } from '../services/socialService';
 import { LikeIcon } from './icons/LikeIcon';
+import { toast } from 'sonner';
 
 interface PostItemProps {
   post: Post;
@@ -24,6 +26,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const { currentUser } = useAuth();
+  const { openLoginModal } = useLoginModal();
 
   useEffect(() => {
     if (currentUser && post.likes) {
@@ -33,7 +36,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
 
   const handleToggleLike = async () => {
     if (!currentUser) {
-      alert('좋아요하려면 로그인이 필요합니다.');
+      openLoginModal();
       return;
     }
 
@@ -50,7 +53,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
       setLikeCount(prev => newIsLiked ? prev + 1 : prev - 1);
     } catch (error) {
       console.error('좋아요 토글 실패:', error);
-      alert('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -96,7 +99,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
 
       setNewComment('');
     } else if (!currentUser) {
-      alert("댓글을 작성하려면 로그인이 필요합니다.")
+      openLoginModal();
     }
   };
 

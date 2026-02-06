@@ -7,6 +7,7 @@ import { ProfileImageService } from '../services/profileImageService';
 import type { UserProfile, Post, Comment, Forum } from '../types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface ProfilePageProps {
     onBack: () => void;
@@ -98,7 +99,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             setIsEditing(false);
         } catch (error) {
             console.error('프로필 저장 실패:', error);
-            alert('프로필 저장 중 오류가 발생했습니다.');
+            toast.error('프로필 저장 중 오류가 발생했습니다.');
         }
     };
 

@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { UserProfileService } from '../services/userProfile';
+import { toast } from 'sonner';
 
 const KakaoCallback: React.FC = () => {
     const { currentUser } = useAuth();
@@ -17,7 +18,7 @@ const KakaoCallback: React.FC = () => {
 
                 if (error) {
                     console.error('카카오 로그인 오류:', error);
-                    alert('카카오 로그인에 실패했습니다.');
+                    toast.error('카카오 로그인에 실패했습니다.');
                     window.location.href = '/';
                     return;
                 }
@@ -102,7 +103,7 @@ const KakaoCallback: React.FC = () => {
                     window.location.href = '/';
                 } catch (error) {
                     console.error('Firebase 로그인 실패:', error);
-                    alert('로그인 처리 중 오류가 발생했습니다: ' + (error as Error).message);
+                    toast.error('로그인 처리 중 오류가 발생했습니다.');
                     window.location.href = '/';
                 }
             } catch (error) {

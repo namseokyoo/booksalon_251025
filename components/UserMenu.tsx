@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { UserProfile } from '../types';
 import { MessagingService } from '../services/messagingService';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface UserMenuProps {
     user: UserProfile;
@@ -15,7 +16,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, onClose, onShowProfile }) => 
 
     const handleSendMessage = async () => {
         if (!currentUser || currentUser.uid === user.uid) {
-            alert('자신에게는 메시지를 보낼 수 없습니다.');
+            toast.warning('자신에게는 메시지를 보낼 수 없습니다.');
             return;
         }
 
@@ -28,11 +29,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, onClose, onShowProfile }) => 
             );
 
             // TODO: 메시지 페이지로 이동하는 로직 추가
-            alert(`${user.nickname || user.displayName}님과의 채팅방이 생성되었습니다.`);
+            toast.success(`${user.nickname || user.displayName}님과의 채팅방이 생성되었습니다.`);
             onClose();
         } catch (error) {
             console.error('채팅방 생성 실패:', error);
-            alert('메시지 전송에 실패했습니다.');
+            toast.error('메시지 전송에 실패했습니다.');
         } finally {
             setIsLoading(false);
         }

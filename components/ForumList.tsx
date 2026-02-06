@@ -7,10 +7,12 @@ import { SearchIcon } from './icons';
 import { db } from '../services/firebase';
 import { collection, onSnapshot, doc, updateDoc, setDoc, query, orderBy, limit } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 import { UserProfileService } from '../services/userProfile';
 import { BookmarkService } from '../services/bookmarkService';
 import { FilterService, type FilterOptions } from '../services/filterService';
 import { BookmarkIcon } from './icons/BookmarkIcon';
+import { toast } from 'sonner';
 
 interface ForumListProps {
   onSelectForum: (forum: Forum) => void;
@@ -31,6 +33,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
   const [filteredForums, setFilteredForums] = useState<Forum[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const { currentUser } = useAuth();
+  const { openLoginModal } = useLoginModal();
 
   const sortOptions = [
     { value: 'recent', label: '최신순' },
@@ -102,9 +105,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
     e.stopPropagation(); // 포럼 클릭 이벤트 방지
 
     if (!currentUser) {
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
+      openLoginModal();
       return;
     }
 
@@ -128,7 +129,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
       }
     } catch (error) {
       console.error('북마크 토글 실패:', error);
-      alert('북마크 처리 중 오류가 발생했습니다.');
+      toast.error('북마크 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -183,9 +184,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
 
   const handleCreateForum = async (book: Book) => {
     if (!currentUser) {
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
+      openLoginModal();
       return;
     }
 

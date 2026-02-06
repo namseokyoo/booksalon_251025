@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AdminService } from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface ReportModalProps {
     isOpen: boolean;
@@ -49,7 +50,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
                 metadata
             );
 
-            alert('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
+            toast.success('신고가 접수되었습니다. 검토 후 조치하겠습니다.');
             onClose();
 
             // 폼 초기화
@@ -58,7 +59,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
             setReportType('spam');
         } catch (error) {
             console.error('신고 접수 실패:', error);
-            alert('신고 접수에 실패했습니다. 다시 시도해주세요.');
+            toast.error('신고 접수에 실패했습니다.');
         } finally {
             setIsSubmitting(false);
         }

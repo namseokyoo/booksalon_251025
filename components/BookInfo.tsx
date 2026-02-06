@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { Book, Forum } from '../types';
 import { RatingService } from '../services/ratingService';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 
 interface BookInfoProps {
   book: Book;
@@ -15,6 +16,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
   const [totalRatings, setTotalRatings] = useState<number>(0);
   const [isEditing, setIsEditing] = useState(false);
   const { currentUser } = useAuth();
+  const { openLoginModal } = useLoginModal();
 
   useEffect(() => {
     const loadRatings = async () => {
@@ -39,7 +41,7 @@ const BookInfo: React.FC<BookInfoProps> = ({ book, forum }) => {
 
   const handleRatingClick = async (rating: number) => {
     if (!currentUser || !forum?.isbn) {
-      alert('평점을 주시려면 로그인이 필요합니다.');
+      openLoginModal();
       return;
     }
 

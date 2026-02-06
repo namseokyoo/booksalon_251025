@@ -12,6 +12,7 @@ import { ArrowLeftIcon, PlusIcon } from './icons';
 import { db } from '../services/firebase';
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 import { UserProfileService } from '../services/userProfile';
 
 interface ForumViewProps {
@@ -31,6 +32,7 @@ const ForumView: React.FC<ForumViewProps> = ({ onBack, onNavigateToMessaging, on
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const { currentUser } = useAuth();
+  const { openLoginModal } = useLoginModal();
 
   // 포럼 데이터 로드
   useEffect(() => {
@@ -63,9 +65,7 @@ const ForumView: React.FC<ForumViewProps> = ({ onBack, onNavigateToMessaging, on
 
   const handleWriteClick = () => {
     if (!currentUser) {
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
+      openLoginModal();
       return;
     }
     setIsModalOpen(true);
@@ -73,9 +73,7 @@ const ForumView: React.FC<ForumViewProps> = ({ onBack, onNavigateToMessaging, on
 
   const handleAddPost = async (title: string, content: string) => {
     if (!currentUser || !isbn) {
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
+      openLoginModal();
       return;
     }
 

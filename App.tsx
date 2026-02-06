@@ -1,6 +1,7 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router';
+import { Toaster } from 'sonner';
 import Header from './components/Header';
 import ForumList from './components/ForumList';
 import ForumView from './components/ForumView';
@@ -13,22 +14,19 @@ import RequireAuth from './components/RequireAuth';
 import AdminRoute from './components/AdminRoute';
 import type { Forum, Book } from './types';
 import { useAuth } from './contexts/AuthContext';
+import { LoginModalProvider, useLoginModal } from './contexts/LoginModalContext';
 import LoginModal from './components/LoginModal';
 import SignUpModal from './components/SignUpModal';
 import DeleteAccountModal from './components/DeleteAccountModal';
 import SearchModal from './components/SearchModal';
 
-const App = () => {
+const AppContent = () => {
   const navigate = useNavigate();
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const { isLoginModalOpen, openLoginModal, closeLoginModal } = useLoginModal();
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const { loading, currentUser } = useAuth();
-
-  const openLoginModal = useCallback(() => {
-    setLoginModalOpen(true);
-  }, []);
 
   const handleSelectForum = (forum: Forum) => {
     navigate(`/forum/${forum.isbn}`);
@@ -52,7 +50,7 @@ const App = () => {
 
   const handleCreateForumFromSearch = async (book: Book) => {
     if (!currentUser) {
-      setLoginModalOpen(true);
+      openLoginModal();
       return;
     }
 
@@ -109,7 +107,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
-        onLoginClick={() => setLoginModalOpen(true)}
+        onLoginClick={openLoginModal}
         onSignUpClick={() => setSignupModalOpen(true)}
         onDeleteClick={() => setDeleteModalOpen(true)}
         onProfileClick={handleShowProfile}
@@ -176,7 +174,7 @@ const App = () => {
         </Routes>
       </main>
 
-      {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
+      {isLoginModalOpen && <LoginModal onClose={closeLoginModal} />}
       {signupModalOpen && <SignUpModal onClose={() => setSignupModalOpen(false)} />}
       {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
       {searchModalOpen && (
@@ -187,7 +185,16 @@ const App = () => {
           onCreateForum={handleCreateForumFromSearch}
         />
       )}
+      <Toaster position="top-center" richColors closeButton />
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <LoginModalProvider>
+      <AppContent />
+    </LoginModalProvider>
   );
 };
 

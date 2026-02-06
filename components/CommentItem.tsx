@@ -4,10 +4,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { UserProfileService } from '../services/userProfile';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 import { db } from '../services/firebase';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { SocialService } from '../services/socialService';
 import { LikeIcon } from './icons/LikeIcon';
+import { toast } from 'sonner';
 
 interface CommentItemProps {
   comment: Comment;
@@ -24,6 +26,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, isbn, onUser
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const { currentUser } = useAuth();
+  const { openLoginModal } = useLoginModal();
 
   useEffect(() => {
     const loadAuthorProfile = async () => {
@@ -60,7 +63,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, isbn, onUser
 
   const handleToggleLike = async () => {
     if (!currentUser) {
-      alert('좋아요하려면 로그인이 필요합니다.');
+      openLoginModal();
       return;
     }
 
@@ -82,12 +85,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, isbn, onUser
 
   const handleEditComment = async () => {
     if (!currentUser || currentUser.uid !== comment.author.uid) {
-      alert('본인의 댓글만 수정할 수 있습니다.');
+      toast.error('본인의 댓글만 수정할 수 있습니다.');
       return;
     }
 
     if (editContent.trim() === '') {
-      alert('내용을 입력해주세요.');
+      toast.warning('내용을 입력해주세요.');
       return;
     }
 
@@ -106,7 +109,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, isbn, onUser
 
   const handleDeleteComment = async () => {
     if (!currentUser || currentUser.uid !== comment.author.uid) {
-      alert('본인의 댓글만 삭제할 수 있습니다.');
+      toast.error('본인의 댓글만 삭제할 수 있습니다.');
       return;
     }
 

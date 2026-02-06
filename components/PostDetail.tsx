@@ -8,9 +8,11 @@ import { ko } from 'date-fns/locale';
 import { db } from '../services/firebase';
 import { doc, getDoc, updateDoc, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useLoginModal } from '../contexts/LoginModalContext';
 import { UserProfileService } from '../services/userProfile';
 import { SocialService } from '../services/socialService';
 import { LikeIcon } from './icons/LikeIcon';
+import { toast } from 'sonner';
 
 interface PostDetailProps {
     post: Post;
@@ -34,6 +36,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, isbn, onBack, onUserClick
     const [mentionSearch, setMentionSearch] = useState('');
     const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
     const { currentUser } = useAuth();
+    const { openLoginModal } = useLoginModal();
 
     useEffect(() => {
         const loadAuthorProfile = async () => {
@@ -81,7 +84,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, isbn, onBack, onUserClick
 
     const handleToggleLike = async () => {
         if (!currentUser) {
-            alert('좋아요하려면 로그인이 필요합니다.');
+            openLoginModal();
             return;
         }
 
@@ -185,12 +188,12 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, isbn, onBack, onUserClick
 
     const handleEditPost = async () => {
         if (!currentUser || currentUser.uid !== post.author.uid) {
-            alert('본인의 게시물만 수정할 수 있습니다.');
+            toast.error('본인의 게시물만 수정할 수 있습니다.');
             return;
         }
 
         if (editTitle.trim() === '' || editContent.trim() === '') {
-            alert('제목과 내용을 입력해주세요.');
+            toast.warning('제목과 내용을 입력해주세요.');
             return;
         }
 
@@ -210,7 +213,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, isbn, onBack, onUserClick
 
     const handleDeletePost = async () => {
         if (!currentUser || currentUser.uid !== post.author.uid) {
-            alert('본인의 게시물만 삭제할 수 있습니다.');
+            toast.error('본인의 게시물만 삭제할 수 있습니다.');
             return;
         }
 

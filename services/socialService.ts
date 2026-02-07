@@ -1,19 +1,19 @@
 import { db } from './firebase';
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit, serverTimestamp, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, orderBy, limit as firestoreLimit, serverTimestamp, increment, arrayRemove, arrayUnion } from 'firebase/firestore';
 import type { UserProfile, Activity } from '../types';
 
 export class SocialService {
     // 사용자 팔로우/언팔로우
     static async toggleFollow(currentUserId: string, targetUserId: string): Promise<boolean> {
-        const currentUserRef = db.collection('users').doc(currentUserId);
-        const targetUserRef = db.collection('users').doc(targetUserId);
+        const currentUserRef = doc(db, 'users', currentUserId);
+        const targetUserRef = doc(db, 'users', targetUserId);
 
         const [currentUserDoc, targetUserDoc] = await Promise.all([
-            currentUserRef.get(),
-            targetUserRef.get()
+            getDoc(currentUserRef),
+            getDoc(targetUserRef)
         ]);
 
-        if (!currentUserDoc.exists || !targetUserDoc.exists) {
+        if (!currentUserDoc.exists() || !targetUserDoc.exists()) {
             throw new Error('사용자를 찾을 수 없습니다.');
         }
 
@@ -21,17 +21,16 @@ export class SocialService {
         const targetUserData = targetUserDoc.data() as UserProfile;
 
         const currentFollowing = currentUserData.following || [];
-        const targetFollowers = targetUserData.followers || [];
 
         const isFollowing = currentFollowing.includes(targetUserId);
 
         if (isFollowing) {
             // 언팔로우
             await Promise.all([
-                currentUserRef.update({
+                updateDoc(currentUserRef, {
                     following: arrayRemove(targetUserId)
                 }),
-                targetUserRef.update({
+                updateDoc(targetUserRef, {
                     followers: arrayRemove(currentUserId)
                 })
             ]);
@@ -51,10 +50,10 @@ export class SocialService {
         } else {
             // 팔로우
             await Promise.all([
-                currentUserRef.update({
+                updateDoc(currentUserRef, {
                     following: arrayUnion(targetUserId)
                 }),
-                targetUserRef.update({
+                updateDoc(targetUserRef, {
                     followers: arrayUnion(currentUserId)
                 })
             ]);
@@ -76,20 +75,20 @@ export class SocialService {
 
     // 팔로우 상태 확인
     static async isFollowing(currentUserId: string, targetUserId: string): Promise<boolean> {
-        const userDoc = await db.collection('users').doc(currentUserId).get();
-        if (!userDoc.exists) return false;
+        const userDocSnap = await getDoc(doc(db, 'users', currentUserId));
+        if (!userDocSnap.exists()) return false;
 
-        const userData = userDoc.data() as UserProfile;
+        const userData = userDocSnap.data() as UserProfile;
         const following = userData.following || [];
         return following.includes(targetUserId);
     }
 
     // 팔로워 목록 조회
     static async getFollowers(userId: string): Promise<UserProfile[]> {
-        const userDoc = await db.collection('users').doc(userId).get();
-        if (!userDoc.exists) return [];
+        const userDocSnap = await getDoc(doc(db, 'users', userId));
+        if (!userDocSnap.exists()) return [];
 
-        const userData = userDoc.data() as UserProfile;
+        const userData = userDocSnap.data() as UserProfile;
         const followerIds = userData.followers || [];
 
         if (followerIds.length === 0) return [];
@@ -97,8 +96,8 @@ export class SocialService {
         const followers: UserProfile[] = [];
         for (const followerId of followerIds) {
             try {
-                const followerDoc = await db.collection('users').doc(followerId).get();
-                if (followerDoc.exists) {
+                const followerDoc = await getDoc(doc(db, 'users', followerId));
+                if (followerDoc.exists()) {
                     followers.push({ uid: followerDoc.id, ...followerDoc.data() } as UserProfile);
                 }
             } catch (error) {
@@ -111,10 +110,10 @@ export class SocialService {
 
     // 팔로잉 목록 조회
     static async getFollowing(userId: string): Promise<UserProfile[]> {
-        const userDoc = await db.collection('users').doc(userId).get();
-        if (!userDoc.exists) return [];
+        const userDocSnap = await getDoc(doc(db, 'users', userId));
+        if (!userDocSnap.exists()) return [];
 
-        const userData = userDoc.data() as UserProfile;
+        const userData = userDocSnap.data() as UserProfile;
         const followingIds = userData.following || [];
 
         if (followingIds.length === 0) return [];
@@ -122,8 +121,8 @@ export class SocialService {
         const following: UserProfile[] = [];
         for (const followingId of followingIds) {
             try {
-                const followingDoc = await db.collection('users').doc(followingId).get();
-                if (followingDoc.exists) {
+                const followingDoc = await getDoc(doc(db, 'users', followingId));
+                if (followingDoc.exists()) {
                     following.push({ uid: followingDoc.id, ...followingDoc.data() } as UserProfile);
                 }
             } catch (error) {
@@ -150,12 +149,12 @@ export class SocialService {
             targetRef = doc(db, 'forums', forumIsbn, 'posts', postId, 'comments', targetId);
         }
 
-        const targetDoc = await getDoc(targetRef);
-        if (!targetDoc.exists) {
+        const targetDocSnap = await getDoc(targetRef);
+        if (!targetDocSnap.exists()) {
             throw new Error('대상을 찾을 수 없습니다.');
         }
 
-        const targetData = targetDoc.data();
+        const targetData = targetDocSnap.data() as { likes?: string[]; likeCount?: number };
         const likes = targetData?.likes || [];
         const isLiked = likes.includes(currentUserId);
 
@@ -190,49 +189,55 @@ export class SocialService {
     }
 
     // 사용자 활동 피드 조회
-    static async getUserActivityFeed(userId: string, limit: number = 20): Promise<Activity[]> {
-        const activitiesRef = db.collection('activities')
-            .where('userId', '==', userId)
-            .orderBy('createdAt', 'desc')
-            .limit(limit);
+    static async getUserActivityFeed(userId: string, limitCount: number = 20): Promise<Activity[]> {
+        const activitiesRef = collection(db, 'activities');
+        const q = query(
+            activitiesRef,
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc'),
+            firestoreLimit(limitCount)
+        );
 
-        const activitiesSnap = await activitiesRef.get();
-        return activitiesSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
+        const activitiesSnap = await getDocs(q);
+        return activitiesSnap.docs.map(docSnap => ({
+            id: docSnap.id,
+            ...docSnap.data()
         })) as Activity[];
     }
 
     // 팔로잉 사용자들의 활동 피드 조회
-    static async getFollowingActivityFeed(userId: string, limit: number = 20): Promise<Activity[]> {
-        const userDoc = await db.collection('users').doc(userId).get();
-        if (!userDoc.exists) return [];
+    static async getFollowingActivityFeed(userId: string, limitCount: number = 20): Promise<Activity[]> {
+        const userDocSnap = await getDoc(doc(db, 'users', userId));
+        if (!userDocSnap.exists()) return [];
 
-        const userData = userDoc.data() as UserProfile;
+        const userData = userDocSnap.data() as UserProfile;
         const followingIds = userData.following || [];
 
         if (followingIds.length === 0) return [];
 
-        const activitiesRef = db.collection('activities')
-            .where('userId', 'in', followingIds)
-            .orderBy('createdAt', 'desc')
-            .limit(limit);
+        const activitiesRef = collection(db, 'activities');
+        const q = query(
+            activitiesRef,
+            where('userId', 'in', followingIds),
+            orderBy('createdAt', 'desc'),
+            firestoreLimit(limitCount)
+        );
 
-        const activitiesSnap = await activitiesRef.get();
-        return activitiesSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
+        const activitiesSnap = await getDocs(q);
+        return activitiesSnap.docs.map(docSnap => ({
+            id: docSnap.id,
+            ...docSnap.data()
         })) as Activity[];
     }
 
     // 사용자 검색
-    static async searchUsers(searchTerm: string, limit: number = 10): Promise<UserProfile[]> {
-        const usersRef = db.collection('users');
-        const usersSnap = await usersRef.get();
+    static async searchUsers(searchTerm: string, limitCount: number = 10): Promise<UserProfile[]> {
+        const usersRef = collection(db, 'users');
+        const usersSnap = await getDocs(usersRef);
 
-        const users = usersSnap.docs.map(doc => ({
-            uid: doc.id,
-            ...doc.data()
+        const users = usersSnap.docs.map(docSnap => ({
+            uid: docSnap.id,
+            ...docSnap.data()
         })) as UserProfile[];
 
         const searchLower = searchTerm.toLowerCase();
@@ -242,6 +247,6 @@ export class SocialService {
             user.bio?.toLowerCase().includes(searchLower)
         );
 
-        return filteredUsers.slice(0, limit);
+        return filteredUsers.slice(0, limitCount);
     }
 }

@@ -46,6 +46,7 @@ export interface UserProfile {
     likes: boolean;
     emailNotifications: boolean;
   };
+  isActive?: boolean; // 사용자 활성 상태
 }
 
 export interface Comment {
@@ -86,6 +87,7 @@ export interface Forum {
   isbn: string;
   book: Book;
   postCount: number;
+  createdAt?: any; // Firestore Timestamp
   lastActivityAt?: any; // Firestore Timestamp
   category?: string; // 카테고리 (문학, SF, 자기계발, 역사 등)
   tags?: string[]; // 태그 목록

@@ -165,18 +165,18 @@ export class MessagingService {
     }
 
     // 사용자 검색 (메시징용)
-    static async searchUsersForMessaging(query: string, currentUserId: string): Promise<UserProfile[]> {
+    static async searchUsersForMessaging(searchTerm: string, currentUserId: string): Promise<UserProfile[]> {
         const usersRef = collection(db, 'users');
         const q = query(
             usersRef,
-            where('displayName', '>=', query),
-            where('displayName', '<=', query + '\uf8ff'),
+            where('displayName', '>=', searchTerm),
+            where('displayName', '<=', searchTerm + '\uf8ff'),
             limit(10)
         );
 
         const snapshot = await getDocs(q);
         return snapshot.docs
-            .map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile))
+            .map(docSnap => ({ uid: docSnap.id, ...docSnap.data() } as UserProfile))
             .filter(user => user.uid !== currentUserId);
     }
 }

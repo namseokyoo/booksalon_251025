@@ -152,7 +152,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
             <h4 className="text-xs sm:text-sm font-semibold text-gray-300 mb-2">댓글</h4>
             <div className="space-y-2 divide-y divide-gray-700/50">
               {comments.length > 0 ? (
-                comments.map(comment => <CommentItem key={comment.id} comment={comment} />)
+                comments.map(comment => <CommentItem key={comment.id} comment={comment} postId={post.id} isbn={isbn} />)
               ) : (
                 <p className="text-xs sm:text-sm text-gray-500 py-2 sm:py-3">아직 댓글이 없습니다.</p>
               )}

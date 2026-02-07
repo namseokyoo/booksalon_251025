@@ -10,10 +10,6 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
@@ -24,10 +20,6 @@ export default defineConfig(({ mode }) => {
           output: {
             manualChunks: {
               'vendor-react': ['react', 'react-dom', 'react-router'],
-              'vendor-firebase-core': ['firebase/app'],
-              'vendor-firebase-firestore': ['firebase/firestore'],
-              'vendor-firebase-auth': ['firebase/auth'],
-              'vendor-firebase-storage': ['firebase/storage'],
             }
           }
         }

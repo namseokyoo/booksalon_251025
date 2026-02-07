@@ -6,6 +6,7 @@ import Header from './components/Header';
 import ForumList from './components/ForumList';
 import RequireAuth from './components/RequireAuth';
 import AdminRoute from './components/AdminRoute';
+import NotFoundPage from './components/NotFoundPage';
 import type { Forum, Book } from './types';
 import { useAuth } from './contexts/AuthContext';
 import { LoginModalProvider, useLoginModal } from './contexts/LoginModalContext';
@@ -189,14 +190,7 @@ const AppContent = () => {
           } />
 
           {/* 404 */}
-          <Route path="*" element={
-            <div className="text-center p-8">
-              <p className="text-gray-900">페이지를 찾을 수 없습니다.</p>
-              <button onClick={handleBackToList} className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors">
-                목록으로 돌아가기
-              </button>
-            </div>
-          } />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 

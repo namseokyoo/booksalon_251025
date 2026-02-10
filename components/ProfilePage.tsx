@@ -119,10 +119,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
         }));
     };
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: string | null | undefined) => {
         if (!timestamp) return '알 수 없음';
         try {
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const date = new Date(timestamp);
             return format(date, 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
         } catch {
             return '알 수 없음';

@@ -17,6 +17,14 @@ import {
 } from 'firebase/firestore';
 import type { AdminUser, Report, UserProfile, Forum, Post, Comment } from '../types';
 
+export interface AdminStats {
+    totalUsers: number;
+    totalForums: number;
+    totalPosts: number;
+    totalReports: number;
+    pendingReports: number;
+}
+
 export class AdminService {
     // 관리자 권한 확인
     static async isAdmin(userId: string): Promise<boolean> {
@@ -24,8 +32,7 @@ export class AdminService {
             const adminRef = doc(db, 'admins', userId);
             const adminDoc = await getDoc(adminRef);
             return adminDoc.exists() && adminDoc.data()?.role === 'admin';
-        } catch (error) {
-            console.error('관리자 권한 확인 실패:', error);
+        } catch {
             return false;
         }
     }
@@ -37,8 +44,7 @@ export class AdminService {
             const adminDoc = await getDoc(adminRef);
             const data = adminDoc.data();
             return adminDoc.exists() && (data?.role === 'admin' || data?.role === 'moderator');
-        } catch (error) {
-            console.error('관리자 권한 확인 실패:', error);
+        } catch {
             return false;
         }
     }
@@ -186,13 +192,7 @@ export class AdminService {
     }
 
     // 통계 조회
-    static async getStats(): Promise<{
-        totalUsers: number;
-        totalForums: number;
-        totalPosts: number;
-        totalReports: number;
-        pendingReports: number;
-    }> {
+    static async getStats(): Promise<AdminStats> {
         const [usersSnapshot, forumsSnapshot, reportsSnapshot] = await Promise.all([
             getDocs(collection(db, 'users')),
             getDocs(collection(db, 'forums')),
@@ -222,7 +222,7 @@ export class AdminService {
     }
 
     // 실시간 통계 리스너
-    static subscribeToStats(callback: (stats: any) => void): () => void {
+    static subscribeToStats(callback: (stats: AdminStats) => void): () => void {
         const usersRef = collection(db, 'users');
         const forumsRef = collection(db, 'forums');
         const reportsRef = collection(db, 'reports');

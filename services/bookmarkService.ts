@@ -57,8 +57,8 @@ export class BookmarkService {
                 if (forumDoc.exists) {
                     forums.push({ isbn: forumDoc.id, ...forumDoc.data() } as Forum);
                 }
-            } catch (error) {
-                console.error(`포럼 ${isbn} 조회 실패:`, error);
+            } catch {
+                // 개별 포럼 조회 실패는 무시하고 계속 진행
             }
         }
 

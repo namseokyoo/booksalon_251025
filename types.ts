@@ -21,8 +21,8 @@ export interface UserProfile {
   bio?: string;
   profileImageUrl?: string; // 프로필 사진 URL
   profileImageFile?: File; // 업로드용 파일 객체
-  createdAt: any; // Firestore Timestamp
-  lastLoginAt: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
+  lastLoginAt?: string; // ISO 8601 timestamp
   postCount: number;
   commentCount: number;
   forumCount: number;
@@ -53,7 +53,7 @@ export interface Comment {
   id: string;
   content: string;
   author: Author;
-  createdAt: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
   likes?: string[]; // 좋아요한 사용자 UID 목록
   likeCount?: number; // 좋아요 수
 }
@@ -63,7 +63,7 @@ export interface Post {
   title: string;
   content: string;
   author: Author;
-  createdAt: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
   commentCount: number;
   likes?: string[]; // 좋아요한 사용자 UID 목록
   likeCount?: number; // 좋아요 수
@@ -79,16 +79,16 @@ export interface Activity {
   targetTitle?: string; // 게시물 제목 또는 사용자명
   forumIsbn?: string; // 관련 포럼 ISBN
   forumTitle?: string; // 관련 포럼 제목
-  createdAt: any; // Firestore Timestamp
-  metadata?: any; // 추가 메타데이터
+  createdAt: string; // ISO 8601 timestamp
+  metadata?: Record<string, unknown>; // 추가 메타데이터
 }
 
 export interface Forum {
   isbn: string;
   book: Book;
   postCount: number;
-  createdAt?: any; // Firestore Timestamp
-  lastActivityAt?: any; // Firestore Timestamp
+  createdAt?: string; // ISO 8601 timestamp
+  lastActivityAt?: string; // ISO 8601 timestamp
   category?: string; // 카테고리 (문학, SF, 자기계발, 역사 등)
   tags?: string[]; // 태그 목록
   popularity?: number; // 인기도 점수
@@ -102,8 +102,8 @@ export interface BookRating {
   bookIsbn: string;
   userId: string;
   rating: number; // 1-5점
-  createdAt: any; // Firestore Timestamp
-  updatedAt?: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
+  updatedAt?: string; // ISO 8601 timestamp
 }
 
 // 메시지 타입
@@ -112,8 +112,8 @@ export interface Message {
   senderId: string;
   receiverId: string;
   content: string;
-  createdAt: any; // Firestore Timestamp
-  readAt?: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
+  readAt?: string | null; // ISO 8601 timestamp
   messageType: 'text' | 'image' | 'file';
   metadata?: {
     fileName?: string;
@@ -127,9 +127,9 @@ export interface ChatRoom {
   id: string;
   participants: string[]; // 사용자 ID 배열
   lastMessage?: Message;
-  lastMessageAt?: any; // Firestore Timestamp
-  createdAt: any; // Firestore Timestamp
-  updatedAt: any; // Firestore Timestamp
+  lastMessageAt?: string; // ISO 8601 timestamp
+  createdAt: string; // ISO 8601 timestamp
+  updatedAt: string; // ISO 8601 timestamp
   unreadCount?: { [userId: string]: number }; // 사용자별 읽지 않은 메시지 수
 }
 
@@ -141,8 +141,8 @@ export interface Notification {
   title: string;
   content: string;
   isRead: boolean;
-  createdAt: any; // Firestore Timestamp
-  readAt?: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
+  readAt?: string | null; // ISO 8601 timestamp
   metadata?: {
     senderId?: string;
     forumId?: string;
@@ -159,7 +159,7 @@ export interface AdminUser {
   displayName: string;
   role: 'admin' | 'moderator' | 'user';
   permissions: string[];
-  createdAt: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
 }
 
 // 신고 타입
@@ -174,8 +174,8 @@ export interface Report {
   reason: string;
   description: string;
   status: 'pending' | 'reviewing' | 'resolved' | 'dismissed';
-  createdAt: any; // Firestore Timestamp
-  resolvedAt?: any; // Firestore Timestamp
+  createdAt: string; // ISO 8601 timestamp
+  resolvedAt?: string; // ISO 8601 timestamp
   resolvedBy?: string; // 해결한 관리자 ID
   resolution?: string; // 해결 내용
 }

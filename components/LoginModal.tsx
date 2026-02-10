@@ -34,8 +34,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
       setSocialLoading(true);
       await loginWithGoogle();
       onClose();
-    } catch (err: any) {
-      setError(err.message || '소셜 로그인에 실패했습니다.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '소셜 로그인에 실패했습니다.');
       console.error(err);
     }
     setSocialLoading(false);
@@ -47,8 +47,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
       setSocialLoading(true);
       await loginWithKakao();
       onClose();
-    } catch (err: any) {
-      setError(err.message || '카카오 로그인에 실패했습니다.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '카카오 로그인에 실패했습니다.');
       console.error(err);
     }
     setSocialLoading(false);

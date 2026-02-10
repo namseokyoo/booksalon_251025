@@ -50,7 +50,7 @@ export class MessagingService {
         };
 
         const docRef = await addDoc(chatRoomsRef, newChatRoom);
-        return { id: docRef.id, ...newChatRoom } as ChatRoom;
+        return { id: docRef.id, ...newChatRoom } as unknown as ChatRoom;
     }
 
     // 메시지 전송
@@ -60,11 +60,11 @@ export class MessagingService {
         receiverId: string,
         content: string,
         messageType: 'text' | 'image' | 'file' = 'text',
-        metadata?: any
+        metadata?: Record<string, unknown>
     ): Promise<string> {
         const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
 
-        const message: any = {
+        const message: Record<string, unknown> = {
             senderId,
             receiverId,
             content,
@@ -113,8 +113,8 @@ export class MessagingService {
 
         // 클라이언트에서 정렬
         return roomsWithMessages.sort((a, b) => {
-            const aTime = a.lastMessageAt?.toDate?.()?.getTime() || 0;
-            const bTime = b.lastMessageAt?.toDate?.()?.getTime() || 0;
+            const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+            const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
             return bTime - aTime;
         });
     }

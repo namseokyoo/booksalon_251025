@@ -196,7 +196,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
       postCount: 0,
       category,
       tags,
-      lastActivityAt: new Date(),
+      lastActivityAt: new Date().toISOString(),
       popularity: 0,
     };
     await setDoc(doc(db, 'forums', book.isbn), newForum);
@@ -436,8 +436,8 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
             {existingForums
               .sort((a, b) => {
                 // createdAt 기준으로 정렬 (최신순)
-                const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const aTime = new Date(a.createdAt || 0);
+                const bTime = new Date(b.createdAt || 0);
                 return bTime.getTime() - aTime.getTime();
               })
               .slice(0, 5) // 최대 5개만 표시
@@ -565,8 +565,8 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
             filteredForums
               .sort((a, b) => {
                 // createdAt 기준으로 정렬 (최신순)
-                const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                const aTime = new Date(a.createdAt || 0);
+                const bTime = new Date(b.createdAt || 0);
                 return bTime.getTime() - aTime.getTime();
               })
               .slice(0, 5) // 최대 5개만 표시

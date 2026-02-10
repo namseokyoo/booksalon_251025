@@ -239,9 +239,9 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, isbn, onBack, onUserClick
         }
     };
 
-    const formatTime = (timestamp: any) => {
+    const formatTime = (timestamp: string | null | undefined) => {
         if (!timestamp) return '';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const date = new Date(timestamp);
         return formatDistanceToNow(date, { addSuffix: true, locale: ko });
     };
 

@@ -33,7 +33,6 @@ export class ProfileImageService {
 
             return downloadURL;
         } catch (error) {
-            console.error('프로필 이미지 업로드 실패:', error);
             throw error;
         }
     }
@@ -46,8 +45,7 @@ export class ProfileImageService {
             // Firebase Storage에서 이미지 삭제
             const imageRef = ref(storage, imageUrl);
             await deleteObject(imageRef);
-        } catch (error) {
-            console.error('프로필 이미지 삭제 실패:', error);
+        } catch {
             // 삭제 실패해도 계속 진행 (이미지가 없을 수도 있음)
         }
     }

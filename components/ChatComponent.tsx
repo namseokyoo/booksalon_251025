@@ -59,9 +59,9 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ chatRoomId, otherUser, on
         }
     };
 
-    const formatMessageTime = (timestamp: any) => {
+    const formatMessageTime = (timestamp: string | null | undefined) => {
         if (!timestamp) return '';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const date = new Date(timestamp);
         return formatDistanceToNow(date, { addSuffix: true, locale: ko });
     };
 

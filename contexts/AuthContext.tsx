@@ -15,16 +15,17 @@ import {
   signInWithCredential,
   EmailAuthProvider,
   linkWithCredential,
-  fetchSignInMethodsForEmail
+  fetchSignInMethodsForEmail,
+  User,
+  UserCredential
 } from 'firebase/auth';
 import { UserProfileService } from '../services/userProfile';
 
 interface AuthContextType {
-  currentUser: any | null;
+  currentUser: User | null;
   loading: boolean;
-  // FIX: Update parameter names from 'pass' to 'password' to match the implementation signature.
-  signup: (email: string, password: string) => Promise<any>;
-  login: (email: string, password: string) => Promise<any>;
+  signup: (email: string, password: string) => Promise<UserCredential>;
+  login: (email: string, password: string) => Promise<UserCredential>;
   loginWithGoogle: () => Promise<void>;
   loginWithKakao: () => Promise<void>;
   logout: () => Promise<void>;
@@ -46,15 +47,13 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // FIX: Add explicit types to function parameters to avoid implicit 'any' errors.
   function signup(email: string, password: string) {
     return createUserWithEmailAndPassword(auth, email, password);
   }
 
-  // FIX: Add explicit types to function parameters to avoid implicit 'any' errors.
   function login(email: string, password: string) {
     return signInWithEmailAndPassword(auth, email, password);
   }
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user.email) {
         try {
           const methods = await fetchSignInMethodsForEmail(auth, user.email);
-          if (methods.includes('password') && !user.providerData.find((p: any) => p.providerId === 'password')) {
+          if (methods.includes('password') && !user.providerData.find((p) => p.providerId === 'password')) {
             // 이메일/비밀번호 계정이 있는데 연결되지 않은 경우, 사용자에게 알림
             console.log('⚠️ 동일한 이메일의 계정이 있습니다. 프로필을 확인해주세요.');
           }
@@ -88,9 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // 에러 무시 (계정이 없는 경우 등)
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Firebase가 자동으로 계정을 연결할 수 있는 경우 에러 처리
-      if (error.code === 'auth/account-exists-with-different-credential') {
+      if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'auth/account-exists-with-different-credential') {
         // 이 경우 사용자에게 기존 계정으로 로그인하도록 안내해야 함
         throw new Error('이미 이메일/비밀번호로 등록된 계정이 있습니다. 해당 방법으로 먼저 로그인한 후 소셜 로그인을 연결할 수 있습니다.');
       }
@@ -120,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user.email) {
         try {
           const methods = await fetchSignInMethodsForEmail(auth, user.email);
-          if (methods.includes('password') && !user.providerData.find((p: any) => p.providerId === 'password')) {
+          if (methods.includes('password') && !user.providerData.find((p) => p.providerId === 'password')) {
             // 이메일/비밀번호 계정이 있는데 연결되지 않은 경우, 사용자에게 알림
             console.log('⚠️ 동일한 이메일의 계정이 있습니다. 프로필을 확인해주세요.');
           }
@@ -128,9 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // 에러 무시 (계정이 없는 경우 등)
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Firebase가 자동으로 계정을 연결할 수 있는 경우 에러 처리
-      if (error.code === 'auth/account-exists-with-different-credential') {
+      if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'auth/account-exists-with-different-credential') {
         // 이 경우 사용자에게 기존 계정으로 로그인하도록 안내해야 함
         throw new Error('이미 이메일/비밀번호로 등록된 계정이 있습니다. 해당 방법으로 먼저 로그인한 후 소셜 로그인을 연결할 수 있습니다.');
       }

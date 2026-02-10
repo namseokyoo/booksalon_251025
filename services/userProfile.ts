@@ -25,14 +25,13 @@ export class UserProfileService {
                 const optimizedFile = await ProfileImageService.optimizeImage(profileImageFile);
                 profileImageUrl = await ProfileImageService.uploadProfileImage(uid, optimizedFile);
             } catch (error) {
-                console.error('프로필 이미지 업로드 실패:', error);
                 throw error;
             }
         }
 
         if (userSnap.exists()) {
             // 기존 사용자 업데이트
-            const updateData: any = {
+            const updateData: Record<string, unknown> = {
                 displayName: displayName || userSnap.data()?.displayName,
                 bio: bio || userSnap.data()?.bio,
                 lastLoginAt: serverTimestamp()
@@ -106,8 +105,8 @@ export class UserProfileService {
 
         // 클라이언트에서 정렬
         return allPosts.sort((a, b) => {
-            const aTime = a.createdAt?.toDate?.() || new Date(0);
-            const bTime = b.createdAt?.toDate?.() || new Date(0);
+            const aTime = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            const bTime = b.createdAt ? new Date(b.createdAt) : new Date(0);
             return bTime.getTime() - aTime.getTime();
         });
     }
@@ -139,8 +138,8 @@ export class UserProfileService {
 
         // 클라이언트에서 정렬
         return allComments.sort((a, b) => {
-            const aTime = a.createdAt?.toDate?.() || new Date(0);
-            const bTime = b.createdAt?.toDate?.() || new Date(0);
+            const aTime = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            const bTime = b.createdAt ? new Date(b.createdAt) : new Date(0);
             return bTime.getTime() - aTime.getTime();
         });
     }
@@ -167,18 +166,15 @@ export class UserProfileService {
                 const optimizedFile = await ProfileImageService.optimizeImage(updateData.profileImageFile);
                 profileImageUrl = await ProfileImageService.uploadProfileImage(uid, optimizedFile);
             } catch (error) {
-                console.error('프로필 이미지 업로드 실패:', error);
                 throw error;
             }
         }
 
-        const dataToUpdate: any = {
-            ...updateData,
+        const { profileImageFile: _file, ...restData } = updateData;
+        const dataToUpdate: Record<string, unknown> = {
+            ...restData,
             lastLoginAt: serverTimestamp()
         };
-
-        // 파일 객체는 제거하고 URL만 저장
-        delete dataToUpdate.profileImageFile;
         if (profileImageUrl) {
             dataToUpdate.profileImageUrl = profileImageUrl;
         }

@@ -100,8 +100,8 @@ export class SocialService {
                 if (followerDoc.exists()) {
                     followers.push({ uid: followerDoc.id, ...followerDoc.data() } as UserProfile);
                 }
-            } catch (error) {
-                console.error(`팔로워 ${followerId} 조회 실패:`, error);
+            } catch {
+                // 개별 팔로워 조회 실패는 무시하고 계속 진행
             }
         }
 
@@ -125,8 +125,8 @@ export class SocialService {
                 if (followingDoc.exists()) {
                     following.push({ uid: followingDoc.id, ...followingDoc.data() } as UserProfile);
                 }
-            } catch (error) {
-                console.error(`팔로잉 ${followingId} 조회 실패:`, error);
+            } catch {
+                // 개별 팔로잉 조회 실패는 무시하고 계속 진행
             }
         }
 
@@ -179,7 +179,7 @@ export class SocialService {
 
     // 활동 기록 생성
     static async createActivity(activityData: Omit<Activity, 'id' | 'createdAt'>): Promise<void> {
-        const activity: Activity = {
+        const activity = {
             ...activityData,
             id: '', // Firestore에서 자동 생성
             createdAt: serverTimestamp()

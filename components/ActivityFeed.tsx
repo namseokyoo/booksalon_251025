@@ -42,9 +42,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ onBack }) => {
         }
     };
 
-    const formatDate = (timestamp: any) => {
-        if (timestamp && typeof timestamp.toDate === 'function') {
-            return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: ko });
+    const formatDate = (timestamp: string | null | undefined) => {
+        if (timestamp) {
+            return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: ko });
         }
         return '방금 전';
     };

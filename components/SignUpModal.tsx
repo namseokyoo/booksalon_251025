@@ -50,8 +50,8 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
       }
 
       onClose();
-    } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
+    } catch (err: unknown) {
+      if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'auth/email-already-in-use') {
         setError('이미 사용 중인 이메일입니다.');
       } else {
         setError('회원가입에 실패했습니다. 다시 시도해주세요.');
@@ -67,8 +67,8 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
       setSocialLoading(true);
       await loginWithGoogle();
       onClose();
-    } catch (err: any) {
-      setError(err.message || '소셜 로그인에 실패했습니다.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '소셜 로그인에 실패했습니다.');
       console.error(err);
     }
     setSocialLoading(false);
@@ -80,8 +80,8 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
       setSocialLoading(true);
       await loginWithKakao();
       onClose();
-    } catch (err: any) {
-      setError(err.message || '카카오 로그인에 실패했습니다.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '카카오 로그인에 실패했습니다.');
       console.error(err);
     }
     setSocialLoading(false);

@@ -30,7 +30,12 @@ const ReportModal: React.FC<ReportModalProps> = ({
 
         setIsSubmitting(true);
         try {
-            const metadata: any = {};
+            const metadata: {
+                reportedUserId?: string;
+                reportedPostId?: string;
+                reportedCommentId?: string;
+                reportedForumId?: string;
+            } = {};
 
             if (type === 'user') {
                 metadata.reportedUserId = targetId;
@@ -145,7 +150,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
                             </label>
                             <select
                                 value={reportType}
-                                onChange={(e) => setReportType(e.target.value as any)}
+                                onChange={(e) => setReportType(e.target.value as 'spam' | 'harassment' | 'inappropriate_content' | 'fake_news' | 'other')}
                                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-cyan-500 focus:border-cyan-500 focus:outline-none"
                             >
                                 {getTypeReasonOptions().map((option) => (

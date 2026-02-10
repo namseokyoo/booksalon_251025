@@ -72,7 +72,7 @@ const AppContent = () => {
       postCount: 0,
       category,
       tags,
-      lastActivityAt: new Date(),
+      lastActivityAt: new Date().toISOString(),
       popularity: 0,
     };
     await setDoc(doc(db, 'forums', book.isbn), newForum);

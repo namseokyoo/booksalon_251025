@@ -62,8 +62,8 @@ const KakaoCallback: React.FC = () => {
                             userCredential = await signInWithEmailAndPassword(auth, emailForFirebase, tempPassword);
                             console.log('기존 계정 로그인 성공');
                             break;
-                        } catch (error: any) {
-                            if (error.code === 'auth/user-not-found') {
+                        } catch (error: unknown) {
+                            if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'auth/user-not-found') {
                                 // 새 계정 생성
                                 console.log('새 계정 생성 시도');
                                 try {
@@ -78,8 +78,8 @@ const KakaoCallback: React.FC = () => {
                                     );
                                     console.log('프로필 저장 완료');
                                     break;
-                                } catch (createError: any) {
-                                    if (createError.code === 'auth/email-already-in-use') {
+                                } catch (createError: unknown) {
+                                    if (createError instanceof Error && 'code' in createError && (createError as { code: string }).code === 'auth/email-already-in-use') {
                                         // 계정이 이미 존재하므로 다시 로그인 시도
                                         console.log('계정이 이미 존재함, 로그인 재시도');
                                         continue;

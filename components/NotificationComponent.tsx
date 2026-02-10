@@ -94,9 +94,9 @@ const NotificationComponent: React.FC = () => {
         }
     };
 
-    const formatNotificationTime = (timestamp: any) => {
+    const formatNotificationTime = (timestamp: string | null | undefined) => {
         if (!timestamp) return '';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const date = new Date(timestamp);
         return formatDistanceToNow(date, { addSuffix: true, locale: ko });
     };
 

@@ -5,12 +5,21 @@ import {
   query,
   limit,
 } from 'firebase/firestore';
-import type { Forum } from '../types';
+import type { Forum, Post, Comment } from '../types';
+
+export interface SearchPost extends Post {
+  forumId: string;
+}
+
+export interface SearchComment extends Comment {
+  forumId: string;
+  postId: string;
+}
 
 export interface CommunitySearchResult {
   forums: Forum[];
-  posts: any[];
-  comments: any[];
+  posts: SearchPost[];
+  comments: SearchComment[];
 }
 
 // 간단한 전역 검색 MVP: 각 포럼을 순회하면서 게시물과 댓글 검색
@@ -36,8 +45,8 @@ export class SearchService {
       });
 
     // 각 포럼의 게시물과 댓글 검색 (최대 10개 포럼만 검색 - 성능 고려)
-    const posts: any[] = [];
-    const comments: any[] = [];
+    const posts: SearchPost[] = [];
+    const comments: SearchComment[] = [];
     const forumsToSearch = forumsSnap.docs.slice(0, 10); // 성능을 위해 제한
 
     const commentPromises: Promise<void>[] = [];
@@ -62,7 +71,7 @@ export class SearchService {
                 id: postDoc.id,
                 ...postData,
                 forumId, // 어느 포럼의 게시물인지 표시
-              });
+              } as SearchPost);
             }
           }
 
@@ -81,17 +90,17 @@ export class SearchService {
                       ...commentData,
                       forumId,
                       postId: postDoc.id,
-                    });
+                    } as SearchComment);
                   }
                 });
-              }).catch(err => {
-                console.error(`댓글 검색 실패 (포럼: ${forumId}, 게시물: ${postDoc.id}):`, err);
+              }).catch(() => {
+                // 개별 댓글 검색 실패는 무시하고 계속 진행
               })
             );
           }
         }
-      } catch (err) {
-        console.error(`게시물 검색 실패 (포럼: ${forumId}):`, err);
+      } catch {
+        // 개별 포럼 검색 실패는 무시하고 계속 진행
       }
     }
 

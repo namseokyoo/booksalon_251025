@@ -99,6 +99,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               required
               className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
               placeholder="이메일"
+              aria-label="이메일 주소"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -107,6 +108,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               required
               className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
               placeholder="닉네임 (2-20자)"
+              aria-label="닉네임"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               maxLength={20}
@@ -116,6 +118,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               required
               className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
               placeholder="비밀번호 (6자 이상)"
+              aria-label="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -124,6 +127,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ onClose }) => {
               required
               className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
               placeholder="비밀번호 확인"
+              aria-label="비밀번호 확인"
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
             />

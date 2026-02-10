@@ -129,7 +129,7 @@ const AppContent = () => {
         onAdminClick={handleShowAdmin}
         onHomeClick={handleHomeClick}
       />
-      <main>
+      <main role="main" aria-label="메인 콘텐츠">
         <Routes>
           {/* 공개 라우트 */}
           <Route path="/" element={<ForumList onSelectForum={handleSelectForum} onLoginRequired={openLoginModal} />} />

@@ -81,6 +81,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="검색 모달 닫기"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -131,6 +132,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
               type="text"
               className="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
               placeholder={searchType === 'book' ? 'ISBN 또는 책 제목을 입력하세요' : '살롱, 게시글, 댓글을 검색하세요'}
+              aria-label={searchType === 'book' ? '도서 검색어 입력' : '커뮤니티 검색어 입력'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

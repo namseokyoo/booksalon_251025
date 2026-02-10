@@ -265,6 +265,7 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
             type="submit"
             className="-ml-px relative inline-flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 border border-l-0 border-gray-300 text-xs sm:text-sm font-medium rounded-r-lg text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors duration-200"
             disabled={isLoading}
+            aria-label="도서 검색"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
@@ -285,6 +286,8 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
         <button
           onClick={() => setIsFilterExpanded(!isFilterExpanded)}
           className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+          aria-label="필터 패널 열기/닫기"
+          aria-expanded={isFilterExpanded}
         >
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

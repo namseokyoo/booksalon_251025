@@ -128,6 +128,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
                 handleToggleLike();
               }}
               className="flex items-center space-x-1 hover:text-red-400 transition-colors duration-200"
+              aria-label={isLiked ? '좋아요 취소' : '좋아요'}
             >
               <LikeIcon
                 className="h-3 w-3 sm:h-4 sm:w-4"
@@ -163,6 +164,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, isbn }) => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={currentUser ? "댓글을 입력하세요..." : "로그인 후 댓글을 작성할 수 있습니다."}
+                aria-label="댓글 입력"
                 className="flex-grow bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-xs sm:text-sm text-gray-200 focus:ring-cyan-500 focus:border-cyan-500"
                 disabled={!currentUser}
               />

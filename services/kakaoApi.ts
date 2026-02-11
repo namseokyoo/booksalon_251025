@@ -20,10 +20,18 @@ interface KakaoBookSearchResponse {
   };
 }
 
+export interface BookSearchResult {
+  books: Book[];
+  isEnd: boolean;
+  totalCount: number;
+  currentPage: number;
+}
+
 // 카카오 API 키 설정 (환경 변수에서 가져오기)
 const KAKAO_API_KEY = import.meta.env.VITE_KAKAO_API_KEY || process.env.KAKAO_API_KEY;
 
 const API_URL = 'https://dapi.kakao.com/v3/search/book';
+const PAGE_SIZE = 10;
 
 export async function searchBookByIsbn(isbn: string): Promise<Book | null> {
   if (!KAKAO_API_KEY) {
@@ -67,12 +75,19 @@ export async function searchBookByIsbn(isbn: string): Promise<Book | null> {
 }
 
 export async function searchBookByTitle(title: string): Promise<Book[]> {
+  const result = await searchBookByTitlePaginated(title, 1);
+  return result.books;
+}
+
+export async function searchBookByTitlePaginated(title: string, page: number = 1): Promise<BookSearchResult> {
+  const emptyResult: BookSearchResult = { books: [], isEnd: true, totalCount: 0, currentPage: page };
+
   if (!KAKAO_API_KEY) {
-    return [];
+    return emptyResult;
   }
 
   try {
-    const url = `${API_URL}?query=${encodeURIComponent(title)}`;
+    const url = `${API_URL}?query=${encodeURIComponent(title)}&page=${page}&size=${PAGE_SIZE}`;
 
     const response = await fetch(url, {
       headers: {
@@ -81,14 +96,13 @@ export async function searchBookByTitle(title: string): Promise<Book[]> {
     });
 
     if (!response.ok) {
-      return [];
+      return emptyResult;
     }
 
     const data: KakaoBookSearchResponse = await response.json();
 
     if (data.documents && data.documents.length > 0) {
       const books = data.documents.map((bookData: KakaoBookDocument) => {
-        // Kakao API returns ISBN with a space sometimes (e.g., "8937462428 9788937462424")
         const cleanIsbn = bookData.isbn ? bookData.isbn.split(' ')[0] : 'unknown';
         return {
           isbn: cleanIsbn,
@@ -99,11 +113,16 @@ export async function searchBookByTitle(title: string): Promise<Book[]> {
           contents: bookData.contents,
         };
       });
-      return books;
+      return {
+        books,
+        isEnd: data.meta.is_end,
+        totalCount: data.meta.total_count,
+        currentPage: page,
+      };
     }
 
-    return [];
+    return emptyResult;
   } catch {
-    return [];
+    return emptyResult;
   }
 }

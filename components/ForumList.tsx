@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Forum, Book } from '../types';
-import { searchBookByIsbn, searchBookByTitle } from '../services/kakaoApi';
+import { searchBookByIsbn, searchBookByTitlePaginated } from '../services/kakaoApi';
 import CreateForumModal from './CreateForumModal';
 import { SearchIcon } from './icons';
 import { db } from '../services/firebase';
@@ -32,6 +32,10 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({});
   const [filteredForums, setFilteredForums] = useState<Forum[]>([]);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [searchPage, setSearchPage] = useState(1);
+  const [isSearchEnd, setIsSearchEnd] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastSearchTerm, setLastSearchTerm] = useState('');
   const { currentUser } = useAuth();
   const { openLoginModal } = useLoginModal();
 
@@ -144,11 +148,10 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
     setSearchResult(null);
     setSearchResults([]);
     setExistingForums([]);
+    setSearchPage(1);
+    setIsSearchEnd(true);
+    setLastSearchTerm(trimmedSearchTerm);
 
-    // Firebase 체크를 임시로 비활성화하고 카카오 API만 테스트
-    console.log('🔍 검색 시작:', trimmedSearchTerm);
-
-    // 먼저 기존 살롱에서 비슷한 제목 검색
     const matchingForums = forums.filter(forum =>
       forum.book.title.toLowerCase().includes(trimmedSearchTerm.toLowerCase()) ||
       forum.book.authors.some(author => author.toLowerCase().includes(trimmedSearchTerm.toLowerCase()))
@@ -156,14 +159,11 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
 
     if (matchingForums.length > 0) {
       setExistingForums(matchingForums);
-      console.log('🏛️ 기존 살롱 발견:', matchingForums.length, '개');
     }
 
-    // ISBN인지 확인 (숫자로만 구성된 10자리 또는 13자리)
     const isIsbn = /^\d{10}$|^\d{13}$/.test(trimmedSearchTerm);
 
     if (isIsbn) {
-      // ISBN으로 검색
       const book = await searchBookByIsbn(trimmedSearchTerm);
       if (book) {
         setSearchResult(book);
@@ -171,15 +171,37 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
         setError('해당 ISBN을 가진 책을 찾을 수 없습니다. 다른 ISBN을 시도해보세요.');
       }
     } else {
-      // 제목으로 검색
-      const books = await searchBookByTitle(trimmedSearchTerm);
-      if (books.length > 0) {
-        setSearchResults(books);
+      const result = await searchBookByTitlePaginated(trimmedSearchTerm, 1);
+      if (result.books.length > 0) {
+        setSearchResults(result.books);
+        setIsSearchEnd(result.isEnd);
+        setSearchPage(1);
       } else if (matchingForums.length === 0) {
         setError('해당 제목의 책을 찾을 수 없습니다. 다른 제목을 시도해보세요.');
       }
     }
     setIsLoading(false);
+  };
+
+  const handleLoadMore = async () => {
+    if (isSearchEnd || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = searchPage + 1;
+      const result = await searchBookByTitlePaginated(lastSearchTerm, nextPage);
+      if (result.books.length > 0) {
+        setSearchResults(prev => [...prev, ...result.books]);
+        setSearchPage(nextPage);
+        setIsSearchEnd(result.isEnd);
+      } else {
+        setIsSearchEnd(true);
+      }
+    } catch {
+      setError('추가 결과를 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   const handleCreateForum = async (book: Book) => {
@@ -557,6 +579,27 @@ const ForumList: React.FC<ForumListProps> = ({ onSelectForum, onLoginRequired })
               );
             })}
           </div>
+          {!isSearchEnd && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-cyan-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none disabled:opacity-50 transition-all duration-200"
+              >
+                {isLoadingMore ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-600"></div>
+                    불러오는 중...
+                  </span>
+                ) : (
+                  '더보기'
+                )}
+              </button>
+            </div>
+          )}
+          {isSearchEnd && searchResults.length > 0 && (
+            <p className="mt-4 text-center text-xs text-gray-400">모든 검색 결과를 표시했습니다</p>
+          )}
         </div>
       )}
 

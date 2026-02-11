@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Forum, Book } from '../types';
-import { searchBookByIsbn, searchBookByTitle } from '../services/kakaoApi';
+import { searchBookByIsbn, searchBookByTitlePaginated } from '../services/kakaoApi';
 import { SearchService, type CommunitySearchResult } from '../services/searchService';
 import { SearchIcon } from './icons';
 
@@ -22,6 +22,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
     posts: [],
     comments: [],
   });
+  const [searchPage, setSearchPage] = useState(1);
+  const [isSearchEnd, setIsSearchEnd] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [lastSearchTerm, setLastSearchTerm] = useState('');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +36,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
     setError(null);
     setBookResults([]);
     setCommunityResults({ forums: [], posts: [], comments: [] });
+    setSearchPage(1);
+    setIsSearchEnd(true);
+    setLastSearchTerm(term);
 
     try {
       if (searchType === 'book') {
-        // 책 검색
         const isIsbn = /^\d{10}$|^\d{13}$/.test(term);
         if (isIsbn) {
           const book = await searchBookByIsbn(term);
@@ -45,15 +51,16 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
             setError('해당 ISBN을 가진 책을 찾을 수 없습니다.');
           }
         } else {
-          const books = await searchBookByTitle(term);
-          if (books.length > 0) {
-            setBookResults(books);
+          const result = await searchBookByTitlePaginated(term, 1);
+          if (result.books.length > 0) {
+            setBookResults(result.books);
+            setIsSearchEnd(result.isEnd);
+            setSearchPage(1);
           } else {
             setError('해당 제목의 책을 찾을 수 없습니다.');
           }
         }
       } else {
-        // 커뮤니티 검색
         const results = await SearchService.searchAll(term);
         setCommunityResults(results);
       }
@@ -62,6 +69,27 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
       setError(error instanceof Error ? error.message : '검색 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (isSearchEnd || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = searchPage + 1;
+      const result = await searchBookByTitlePaginated(lastSearchTerm, nextPage);
+      if (result.books.length > 0) {
+        setBookResults(prev => [...prev, ...result.books]);
+        setSearchPage(nextPage);
+        setIsSearchEnd(result.isEnd);
+      } else {
+        setIsSearchEnd(true);
+      }
+    } catch {
+      setError('추가 결과를 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -98,6 +126,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
               setError(null);
               setBookResults([]);
               setCommunityResults({ forums: [], posts: [], comments: [] });
+              setSearchPage(1);
+              setIsSearchEnd(true);
             }}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               searchType === 'book'
@@ -114,6 +144,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
               setError(null);
               setBookResults([]);
               setCommunityResults({ forums: [], posts: [], comments: [] });
+              setSearchPage(1);
+              setIsSearchEnd(true);
             }}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               searchType === 'community'
@@ -189,6 +221,27 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectForu
                 <p className="text-center text-gray-500 py-8">검색 결과가 없습니다.</p>
               ) : (
                 <p className="text-center text-gray-400 py-8">검색어를 입력하세요.</p>
+              )}
+              {bookResults.length > 0 && !isSearchEnd && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-cyan-300 focus:ring-2 focus:ring-cyan-500 focus:outline-none disabled:opacity-50 transition-all duration-200"
+                  >
+                    {isLoadingMore ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-600"></div>
+                        불러오는 중...
+                      </span>
+                    ) : (
+                      '더보기'
+                    )}
+                  </button>
+                </div>
+              )}
+              {bookResults.length > 0 && isSearchEnd && (
+                <p className="mt-4 text-center text-xs text-gray-400">모든 검색 결과를 표시했습니다</p>
               )}
             </div>
           ) : (
